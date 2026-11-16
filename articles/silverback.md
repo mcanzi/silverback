@@ -31,13 +31,18 @@ library(dplyr, warn.conflicts = FALSE)
 On the Data tab of your experiment, generate the data for the versions
 you need and download it. Gorilla offers two layouts, one file per node
 of the experiment tree or combined files with all tasks in one file and
-all questionnaires in another. Either works as long as you choose CSV.
+all questionnaires in another. Either works, as CSV or as Excel files.
 Questionnaires can be downloaded in long or short format.
+
+Excel files give the same tables as CSV files. Some Excel downloads
+store numbers as numbers, however, so a code such as `007` may already
+have lost its leading zeros in the file. If your spreadsheets or answers
+contain such codes, download CSV files.
 
 Unzip the download or leave it as it is.
 [`read_gorilla()`](https://mcanzi.de/silverback/reference/read_gorilla.md)
-accepts the ZIP file, the folder or single CSV files. Keep one layout
-per folder: with both, the same rows would be read twice, and
+accepts the ZIP file, the folder or single files. Keep one layout and
+one format per folder: otherwise the same rows would be read twice, and
 [`read_gorilla()`](https://mcanzi.de/silverback/reference/read_gorilla.md)
 warns about it.
 

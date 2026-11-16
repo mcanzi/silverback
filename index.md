@@ -15,8 +15,9 @@ It reads
   short format,
 - downloads with one file per node and combined downloads,
 - several versions of an experiment at once,
-- folders, single CSV files and ZIP archives as downloaded, also after
-  they were saved again with semicolons or tabs,
+- CSV and Excel downloads,
+- folders, single files and ZIP archives as downloaded, also after CSV
+  files were saved again with semicolons or tabs,
 - recordings of the Eye Tracking (Webgazer) and Mouse Tracking
   components of Task Builder 2.
 

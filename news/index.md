@@ -52,3 +52,6 @@
   [`gorilla_checks()`](https://mcanzi.de/silverback/reference/gorilla_checks.md)
   then uses the clicked object for the `same_response` check. The
   `response` column itself is not changed.
+- [`read_gorilla()`](https://mcanzi.de/silverback/reference/read_gorilla.md)
+  reads Excel downloads (`.xlsx`) and gives the same tables as for CSV
+  downloads. It warns when the same file is read in both formats.
