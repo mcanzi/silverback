@@ -7,11 +7,10 @@
 read_gorilla(path, quiet = FALSE)
 }
 \arguments{
-\item{path}{Paths to folders, CSV files or ZIP archives. Folders and ZIP
-archives are searched recursively for CSV files whose names start with
-\code{data_exp_}, the names 'Gorilla' gives its downloads. CSV files named
-directly are read whatever their name. Excel downloads cannot be read;
-download the data as CSV instead.}
+\item{path}{Paths to folders, CSV or Excel files, or ZIP archives. Folders
+and ZIP archives are searched recursively for CSV and Excel files whose
+names start with \code{data_exp_}, the names 'Gorilla' gives its downloads.
+Files named directly are read whatever their name.}
 
 \item{quiet}{If \code{TRUE}, no message about skipped files is shown.}
 }
@@ -33,21 +32,26 @@ builder, task and number of rows.}
 }
 }
 \description{
-Reads the CSV files downloaded from the Data tab of the 'Gorilla'
+Reads the CSV or Excel files downloaded from the Data tab of the 'Gorilla'
 Experiment Builder and sorts them into tasks, questionnaires and
 participants. Both kinds of download are read: one file per node of the
 experiment tree (\code{data_exp_12345-v6_task-ab12.csv}) and the combined files
 (\code{data_exp_12345-v6_tasks.csv}, \code{data_exp_12345-v6_questionnaires.csv}).
 }
 \details{
+Excel files (\code{.xlsx}) are read with every cell as text, so they give the
+same tables as the CSV download. Some Excel downloads store numbers as
+numbers, though, and a code such as \code{007} saved that way has already lost
+its leading zeros in the file. Download CSV files if such codes matter.
+
 Files from Task Builder 1 and 2 and from Questionnaire Builder 1 and 2
 can be mixed, and so can files from several versions of the experiment.
 The \verb{END OF FILE} row at the end of each file is removed, and files from
 nodes that no participant reached, which hold no data, are skipped. Files
 that were opened in a spreadsheet program and saved again with semicolons
 or tabs as separators are read too. If the files include both kinds of
-download, a warning says so, because the same rows would then be read
-twice. Lines with the wrong number of columns, as in a file that was cut
+download, or the same file as CSV and as Excel, a warning says so,
+because the same rows would then be read twice. Lines with the wrong number of columns, as in a file that was cut
 off or edited by hand, also give a warning.
 
 Column names are converted to snake case: \verb{Participant Private ID}

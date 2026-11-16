@@ -12,7 +12,8 @@ It reads
 - Questionnaire Builder 1 and Questionnaire Builder 2 data, in long and short format,
 - downloads with <span class="hl">one file per node</span> and <span class="hl">combined downloads</span>,
 - several versions of an experiment at once,
-- folders, single CSV files and ZIP archives as downloaded, also after they were saved again with semicolons or tabs,
+- CSV and Excel downloads,
+- folders, single files and ZIP archives as downloaded, also after CSV files were saved again with semicolons or tabs,
 - recordings of the Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2.
 
 Files from nodes that no participant reached are skipped.

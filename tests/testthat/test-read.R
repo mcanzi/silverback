@@ -65,7 +65,7 @@ test_that("missing paths, other files and folders without exports give errors", 
   xl <- tempfile()
   dir.create(xl)
   file.create(file.path(xl, "data_exp_1-v1_tasks.xlsx"))
-  expect_warning(expect_error(read_gorilla(xl), "No Gorilla files"), "Excel")
+  expect_error(read_gorilla(xl), "^data_exp_1-v1_tasks.xlsx could not be read as an Excel file")
   dir <- tempfile()
   dir.create(dir)
   expect_error(read_gorilla(dir), "No Gorilla files")
@@ -184,4 +184,45 @@ test_that("rows with the wrong number of columns give a warning", {
   readr::write_csv(meta("101", "Task", "task-ab12", 2), path, na = "")
   write(c("1,2", "END OF FILE"), path, append = TRUE)
   expect_warning(read_gorilla(dir), "1 line with the wrong number of columns \\(line 4\\)")
+})
+
+# Writes each CSV file of the example as an Excel file. With `numbers`, columns
+# whose values are all numbers are stored as numbers, as in older Excel
+# downloads; otherwise every cell is text, as in newer ones.
+example_as_excel <- function(numbers = FALSE) {
+  dir <- tempfile()
+  dir.create(dir)
+  for (f in list.files(gorilla_example(), full.names = TRUE)) {
+    d <- readr::read_csv(f, col_types = readr::cols(.default = "c"), na = "")
+    if (numbers) {
+      d <- dplyr::mutate(d, dplyr::across(dplyr::everything(), \(v) {
+        text <- !is.na(v) & !grepl("^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$", v)
+        if (any(text) || all(is.na(v))) v else as.numeric(v)
+      }))
+    }
+    writexl::write_xlsx(d, file.path(dir, sub("\\.csv$", ".xlsx", basename(f))))
+  }
+  dir
+}
+
+without_file <- function(df) if (is.null(df)) df else dplyr::select(df, -dplyr::any_of("file"))
+
+test_that("Excel downloads give the same tables as CSV downloads", {
+  skip_if_not_installed("writexl")
+  csv <- read_gorilla(gorilla_example(), quiet = TRUE)
+  for (numbers in c(FALSE, TRUE)) {
+    xl <- read_gorilla(example_as_excel(numbers), quiet = TRUE)
+    expect_equal(without_file(xl$tasks), without_file(csv$tasks))
+    expect_equal(without_file(xl$questionnaires), without_file(csv$questionnaires))
+    expect_equal(xl$participants, csv$participants)
+    expect_equal(sub("[.]xlsx$", ".csv", xl$files$file), csv$files$file)
+    expect_equal(gorilla_wide(xl), gorilla_wide(csv))
+  }
+})
+
+test_that("the same file as CSV and as Excel gives a warning", {
+  skip_if_not_installed("writexl")
+  dir <- example_as_excel()
+  file.copy(gorilla_example("data_exp_123456-v3_task-ld2k.csv"), dir)
+  expect_warning(read_gorilla(dir, quiet = TRUE), "both as CSV and as Excel: data_exp_123456-v3_task-ld2k")
 })

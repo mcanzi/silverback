@@ -23,11 +23,16 @@ node_col_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")-")
 
 #' Read Gorilla exports
 #'
-#' Reads the CSV files downloaded from the Data tab of the 'Gorilla'
+#' Reads the CSV or Excel files downloaded from the Data tab of the 'Gorilla'
 #' Experiment Builder and sorts them into tasks, questionnaires and
 #' participants. Both kinds of download are read: one file per node of the
 #' experiment tree (`data_exp_12345-v6_task-ab12.csv`) and the combined files
 #' (`data_exp_12345-v6_tasks.csv`, `data_exp_12345-v6_questionnaires.csv`).
+#'
+#' Excel files (`.xlsx`) are read with every cell as text, so they give the
+#' same tables as the CSV download. Some Excel downloads store numbers as
+#' numbers, though, and a code such as `007` saved that way has already lost
+#' its leading zeros in the file. Download CSV files if such codes matter.
 #'
 #' Files from Task Builder 1 and 2 and from Questionnaire Builder 1 and 2
 #' can be mixed, and so can files from several versions of the experiment.
@@ -35,8 +40,8 @@ node_col_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")-")
 #' nodes that no participant reached, which hold no data, are skipped. Files
 #' that were opened in a spreadsheet program and saved again with semicolons
 #' or tabs as separators are read too. If the files include both kinds of
-#' download, a warning says so, because the same rows would then be read
-#' twice. Lines with the wrong number of columns, as in a file that was cut
+#' download, or the same file as CSV and as Excel, a warning says so,
+#' because the same rows would then be read twice. Lines with the wrong number of columns, as in a file that was cut
 #' off or edited by hand, also give a warning.
 #'
 #' Column names are converted to snake case: `Participant Private ID`
@@ -49,11 +54,10 @@ node_col_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")-")
 #' leading zeros, so codes such as `007` and response keys such as `T` and
 #' `F` stay text. Identifiers and responses always stay text.
 #'
-#' @param path Paths to folders, CSV files or ZIP archives. Folders and ZIP
-#'   archives are searched recursively for CSV files whose names start with
-#'   `data_exp_`, the names 'Gorilla' gives its downloads. CSV files named
-#'   directly are read whatever their name. Excel downloads cannot be read;
-#'   download the data as CSV instead.
+#' @param path Paths to folders, CSV or Excel files, or ZIP archives. Folders
+#'   and ZIP archives are searched recursively for CSV and Excel files whose
+#'   names start with `data_exp_`, the names 'Gorilla' gives its downloads.
+#'   Files named directly are read whatever their name.
 #' @param quiet If `TRUE`, no message about skipped files is shown.
 #'
 #' @return An object of class `gorilla_data`: a list with
@@ -85,19 +89,27 @@ read_gorilla <- function(path, quiet = FALSE) {
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   files <- find_gorilla_files(path, tmp)
   if (length(files) == 0L) {
-    stop("No Gorilla files (data_exp_*.csv) found in `path`.", call. = FALSE)
+    stop("No Gorilla files (data_exp_*.csv or data_exp_*.xlsx) found in `path`.",
+         call. = FALSE)
   }
   # lapply() rather than purrr::map(), which would wrap errors about a file in
   # an "In index" message.
   parsed <- lapply(files, read_gorilla_file)
   info <- parsed |> purrr::map("info") |> dplyr::bind_rows()
-  combined <- stringr::str_detect(info$file, "_(tasks|questionnaires)\\.csv$")
-  per_node <- stringr::str_detect(info$file, "_(task|questionnaire)-[a-z0-9]+\\.csv$")
+  combined <- stringr::str_detect(info$file, "_(tasks|questionnaires)\\.(csv|xlsx)$")
+  per_node <- stringr::str_detect(info$file, "_(task|questionnaire)-[a-z0-9]+\\.(csv|xlsx)$")
   if (any(combined & info$rows > 0L) && any(per_node & info$rows > 0L)) {
     warning("The files include both combined downloads (",
             info$file[combined] |> paste(collapse = ", "),
             ") and files for single nodes. The same rows are probably read twice; ",
             "read one kind of download only.", call. = FALSE)
+  }
+  stem <- stringr::str_remove(info$file, "\\.(csv|xlsx)$")
+  twice <- unique(stem[duplicated(stem) & info$rows > 0L])
+  if (length(twice)) {
+    warning("These files were read both as CSV and as Excel: ",
+            paste(twice, collapse = ", "), ". The same rows are read twice; ",
+            "read one format only.", call. = FALSE)
   }
   empty <- info$rows == 0L
   if (any(empty) && !quiet) {
@@ -125,11 +137,12 @@ read_gorilla <- function(path, quiet = FALSE) {
   out
 }
 
-data_pattern <- "^data_exp_.*\\.csv$"
+data_pattern <- "^data_exp_.*\\.(csv|xlsx)$"
 
 find_gorilla_files <- function(path, tmp, pattern = data_pattern) {
   if (!is.character(path) || length(path) == 0L) {
-    stop("`path` must be one or more paths to folders, CSV files or ZIP files.", call. = FALSE)
+    stop("`path` must be one or more paths to folders, CSV or Excel files or ZIP files.",
+         call. = FALSE)
   }
   # lapply() keeps errors such as "Path not found" plain; see read_gorilla().
   path |>
@@ -138,12 +151,6 @@ find_gorilla_files <- function(path, tmp, pattern = data_pattern) {
         listed <- list.files(p, recursive = TRUE, full.names = TRUE)
         listed <- listed[!stringr::str_detect(listed, "(^|/)__MACOSX/|(^|/)\\._")]
         name <- basename(listed)
-        excel <- name |>
-          stringr::str_detect(stringr::regex("^data_exp_.*\\.xlsx$", ignore_case = TRUE))
-        if (identical(pattern, data_pattern) && any(excel)) {
-          warning("Skipped ", sum(excel), " Excel file", if (sum(excel) > 1L) "s",
-                  ". Download the data from Gorilla as CSV to read them.", call. = FALSE)
-        }
         listed[stringr::str_detect(name, stringr::regex(pattern, ignore_case = TRUE))]
       } else if (file.exists(p) &&
                  stringr::str_detect(p, stringr::regex("\\.zip$", ignore_case = TRUE))) {
@@ -201,6 +208,26 @@ read_csv_chr <- function(file, delim = detect_delim(file)) {
   df[!eof, ]
 }
 
+# Excel downloads have one sheet laid out like the CSV file. Reading every
+# cell as text keeps identifiers and numbers as Gorilla wrote them.
+read_xlsx_chr <- function(file) {
+  df <- tryCatch(
+    readxl::read_xlsx(file, sheet = 1L, col_types = "text", na = "",
+                      trim_ws = FALSE, .name_repair = "minimal"),
+    error = function(e) {
+      stop(basename(file), " could not be read as an Excel file. It may be damaged ",
+           "or saved in another format.", call. = FALSE)
+    }
+  )
+  if (ncol(df) == 0L) return(df)
+  df |> dplyr::filter(!stringr::str_trim(dplyr::pick(1L)[[1L]]) %in% "END OF FILE")
+}
+
+read_table_chr <- function(file) {
+  is_excel <- stringr::str_detect(file, stringr::regex("\\.xlsx$", ignore_case = TRUE))
+  if (is_excel) read_xlsx_chr(file) else read_csv_chr(file)
+}
+
 detect_builder <- function(cols, kind) {
   if ("Zone Type" %in% cols) return("task_builder_1")
   if ("Component Name" %in% cols || all(c("Display", "Screen") %in% cols)) {
@@ -215,7 +242,7 @@ detect_builder <- function(cols, kind) {
 }
 
 read_gorilla_file <- function(file) {
-  raw <- read_csv_chr(file)
+  raw <- read_table_chr(file)
   if (!"Participant Private ID" %in% names(raw)) {
     stop(basename(file), " does not look like a Gorilla export: it has no ",
          "`Participant Private ID` column.", call. = FALSE)

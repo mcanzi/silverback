@@ -33,3 +33,5 @@
   Response without response values, recorded empty responses, and
   `gorilla_checks()` then uses the clicked object for the `same_response`
   check. The `response` column itself is not changed.
+* `read_gorilla()` reads Excel downloads (`.xlsx`) and gives the same tables
+  as for CSV downloads. It warns when the same file is read in both formats.
