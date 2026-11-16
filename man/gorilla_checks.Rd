@@ -56,7 +56,9 @@ most participants.}
 responses in a task faster than \code{fast} milliseconds.}
 \item{same_response}{Participants who gave the same response in more
 than the proportion \code{max_same} of at least \code{min_responses} responses in
-a task where other responses were possible.}
+a task where other responses were possible. For components that
+recorded no response values, the object clicked or chosen counts as the
+response.}
 }
 }
 \examples{

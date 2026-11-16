@@ -27,7 +27,9 @@ findings <- function(check, detail, participant_private_id = NA_character_,
 #'     responses in a task faster than `fast` milliseconds.}
 #'   \item{same_response}{Participants who gave the same response in more
 #'     than the proportion `max_same` of at least `min_responses` responses in
-#'     a task where other responses were possible.}
+#'     a task where other responses were possible. For components that
+#'     recorded no response values, the object clicked or chosen counts as the
+#'     response.}
 #' }
 #'
 #' @param x A `gorilla_data` object from [read_gorilla()].
@@ -129,7 +131,12 @@ gorilla_checks <- function(x, fast = 200, max_fast = 0.1, max_same = 0.9,
     )
   }
   if (!is.null(x$tasks)) {
-    tr <- gorilla_trials(x)
+    tr <- gorilla_trials(x, quiet = TRUE)
+    # Components that recorded no response values: the object is the answer.
+    no_value <- empty_responses(tr) |> dplyr::mutate(no_value = TRUE)
+    tr <- tr |>
+      dplyr::left_join(no_value, by = c("task_name", "component")) |>
+      dplyr::mutate(response = dplyr::if_else(no_value %in% TRUE, object, response))
     speed <- tr |>
       dplyr::summarise(n = dplyr::n(), timed = sum(!is.na(rt)),
                        quick = sum(rt < fast, na.rm = TRUE),

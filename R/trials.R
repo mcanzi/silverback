@@ -15,6 +15,15 @@
 #' @param all_rows Keep all rows of the trials, not only the responses. A
 #'   column `response_type` then says what each row is, such as
 #'   `"response"`, `"info"` or a zone type.
+#' @param quiet If `TRUE`, no message about components without response
+#'   values is shown.
+#'
+#' @details Some components can record a response without a value, such as a
+#'   Click Response whose objects have no response set up in 'Gorilla'. The
+#'   clicked object is then only in `object`. When every response of a
+#'   component in a task is empty, a message names the task and component.
+#'   `response` is left empty, so use `dplyr::coalesce(response, object)` if the object names are
+#'   the answers.
 #'
 #' @return A tibble with one row per response and columns
 #' \describe{
@@ -44,7 +53,7 @@
 #' gorilla_trials(g)
 #' gorilla_trials(g, task = "Lexical decision")
 #' @export
-gorilla_trials <- function(x, task = NULL, all_rows = FALSE) {
+gorilla_trials <- function(x, task = NULL, all_rows = FALSE, quiet = FALSE) {
   check_gorilla(x)
   d <- x$tasks
   if (is.null(d)) stop("The data contain no tasks.", call. = FALSE)
@@ -96,7 +105,25 @@ gorilla_trials <- function(x, task = NULL, all_rows = FALSE) {
   extra <- d |>
     dplyr::select(dplyr::matches("^(spreadsheet|store)_"), -dplyr::any_of("spreadsheet_name")) |>
     drop_empty_cols()
+  if (!all_rows && !quiet) {
+    empty <- empty_responses(out)
+    if (nrow(empty)) {
+      message(paste0(empty$task_name, ": ", empty$component, collapse = "; "),
+              ". These components recorded no response values; the clicked or chosen ",
+              "object is in `object`.")
+    }
+  }
   dplyr::bind_cols(out, timing, extra)
+}
+
+# Tasks and components where every response is empty but the object that
+# recorded it is known.
+empty_responses <- function(tr) {
+  tr |>
+    dplyr::summarise(empty = all(is.na(response)) && any(!is.na(object)),
+                     .by = c(task_name, component)) |>
+    dplyr::filter(empty) |>
+    dplyr::select(task_name, component)
 }
 
 timing_cols <- c("reaction_onset", "onset_time", "clock_time", "absolute_onset_time",

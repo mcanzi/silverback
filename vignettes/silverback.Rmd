@@ -105,6 +105,8 @@ ld |>
   summarise(rt = median(rt), .by = spreadsheet_lexicality)
 ```
 
+Some components can record a response without a value: a Click Response whose objects have no response set up in Gorilla records only which object was clicked. `gorilla_trials()` then gives a message, and the answer is in `object`. `gorilla_checks()` uses the object for these components when it looks for identical responses.
+
 Leave out `task` to get the responses of all tasks in one table. If you need the rows around each response, such as the moment an audio file started, use `all_rows = TRUE`. Every column of the export, including the metadata left out here, remains in `g$tasks`.
 
 ## Get one row per participant for questionnaires

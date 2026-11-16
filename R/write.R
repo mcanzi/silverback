@@ -36,7 +36,7 @@ write_gorilla <- function(x, path, by_task = FALSE, overwrite = FALSE) {
   }
   tables <- list(participants = gorilla_participants(x))
   if (!is.null(x$tasks)) {
-    trials <- gorilla_trials(x)
+    trials <- gorilla_trials(x, quiet = TRUE)
     if (by_task) {
       tasks <- trials$task_name |> unique() |> stats::na.omit() |> as.character()
       files <- paste0("trials_", clean_names(tasks))

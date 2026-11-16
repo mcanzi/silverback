@@ -46,3 +46,40 @@ test_that("trials keep the repeat key, task version and timing columns", {
   expect_false("absolute_onset_time" %in% names(t))
   expect_true(match("onset_time", names(t)) > match("time", names(t)))
 })
+
+test_that("components without response values give a message and count objects in checks", {
+  dir <- tempfile()
+  dir.create(dir)
+  click <- function(id, objects) {
+    d <- meta(id, "Melody test", "task-mt1", length(objects))
+    d$`Trial Number` <- as.character(seq_along(objects))
+    d$Display <- "Trial"
+    d$Screen <- "Response"
+    d$`Response Type` <- "response"
+    d$`Component Name` <- "Click Response"
+    d$`Object Name` <- objects
+    d$Response <- ""
+    d$`Reaction Time` <- "900"
+    d
+  }
+  task <- rbind(click("801", rep("SAME", 12)), click("802", rep(c("SAME", "DIFFERENT"), 6)))
+  write_export(dir, "data_exp_55555-v1_task-mt1.csv", task)
+  g <- read_gorilla(dir)
+  expect_message(tr <- gorilla_trials(g),
+                 "Melody test: Click Response. These components recorded no response values")
+  expect_true(all(is.na(tr$response)))
+  expect_equal(tr$object[1:2], c("SAME", "SAME"))
+  expect_no_message(gorilla_trials(g, quiet = TRUE))
+  expect_no_message(gorilla_trials(g, all_rows = TRUE))
+  expect_no_message(ch <- gorilla_checks(g))
+  same <- ch[ch$check == "same_response", ]
+  expect_equal(same$participant_private_id, "801")
+  expect_match(same$detail, "response 'SAME' in 12 of 12")
+  expect_no_message(summary(g))
+  expect_no_message(write_gorilla(g, file.path(dir, "out")))
+})
+
+test_that("tasks with response values are left alone", {
+  g <- read_gorilla(gorilla_example(), quiet = TRUE)
+  expect_no_message(gorilla_trials(g))
+})

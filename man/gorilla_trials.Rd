@@ -4,7 +4,7 @@
 \alias{gorilla_trials}
 \title{Responses in task data}
 \usage{
-gorilla_trials(x, task = NULL, all_rows = FALSE)
+gorilla_trials(x, task = NULL, all_rows = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{x}{A \code{gorilla_data} object from \code{\link[=read_gorilla]{read_gorilla()}}.}
@@ -15,6 +15,9 @@ All by default.}
 \item{all_rows}{Keep all rows of the trials, not only the responses. A
 column \code{response_type} then says what each row is, such as
 \code{"response"}, \code{"info"} or a zone type.}
+
+\item{quiet}{If \code{TRUE}, no message about components without response
+values is shown.}
 }
 \value{
 A tibble with one row per response and columns
@@ -50,6 +53,13 @@ events and other information are dropped.
 In Task Builder 2 a response is a row with \code{response_type} \code{"response"}.
 In Task Builder 1 it is a row from a response zone (\code{zone_type} starting
 with \code{response_}).
+
+Some components can record a response without a value, such as a
+Click Response whose objects have no response set up in 'Gorilla'. The
+clicked object is then only in \code{object}. When every response of a
+component in a task is empty, a message names the task and component.
+\code{response} is left empty, so use \code{dplyr::coalesce(response, object)} if the object names are
+the answers.
 }
 \examples{
 g <- read_gorilla(gorilla_example())

@@ -36,7 +36,7 @@ share <- function(v) if (length(v)) v |> mean(na.rm = TRUE) |> round(3) else NA_
 summary.gorilla_data <- function(object, fast = 200, slow = 10000, ...) {
   out <- list(tasks = NULL, questionnaires = NULL)
   if (!is.null(object$tasks)) {
-    tr <- gorilla_trials(object)
+    tr <- gorilla_trials(object, quiet = TRUE)
     tasks <- object$tasks |>
       dplyr::summarise(
         builder = builder |> unique() |> paste(collapse = ", ") |>

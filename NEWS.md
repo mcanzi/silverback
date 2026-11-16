@@ -29,3 +29,7 @@
   Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2:
   gaze and mouse samples assigned to screen zones, the zones themselves, and
   the accuracy and outcome of each calibration attempt.
+* `gorilla_trials()` gives a message when a component, such as a Click
+  Response without response values, recorded empty responses, and
+  `gorilla_checks()` then uses the clicked object for the `same_response`
+  check. The `response` column itself is not changed.
