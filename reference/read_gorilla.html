@@ -102,10 +102,10 @@ can be mixed, and so can files from several versions of the experiment.
 The <code>END OF FILE</code> row at the end of each file is removed, and files from
 nodes that no participant reached, which hold no data, are skipped. Files
 that were opened in a spreadsheet program and saved again with semicolons
-as separators are read too. If the files include both kinds of download,
-a warning says so, because the same rows would then be read twice. Lines
-with the wrong number of columns, as in a file that was cut off or edited
-by hand, also give a warning.</p>
+or tabs as separators are read too. If the files include both kinds of
+download, a warning says so, because the same rows would then be read
+twice. Lines with the wrong number of columns, as in a file that was cut
+off or edited by hand, also give a warning.</p>
 <p>Column names are converted to snake case: <code>Participant Private ID</code>
 becomes <code>participant_private_id</code>, <code>Spreadsheet: Speaker</code> becomes
 <code>spreadsheet_speaker</code> and <code>Store: Alter</code> becomes <code>store_alter</code>. Spreadsheet

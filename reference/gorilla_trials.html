@@ -49,7 +49,7 @@ events and other information are dropped.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gorilla_trials</span><span class="op">(</span><span class="va">x</span>, task <span class="op">=</span> <span class="cn">NULL</span>, all_rows <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gorilla_trials</span><span class="op">(</span><span class="va">x</span>, task <span class="op">=</span> <span class="cn">NULL</span>, all_rows <span class="op">=</span> <span class="cn">FALSE</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -69,6 +69,11 @@ All by default.</p></dd>
 <dd><p>Keep all rows of the trials, not only the responses. A
 column <code>response_type</code> then says what each row is, such as
 <code>"response"</code>, <code>"info"</code> or a zone type.</p></dd>
+
+
+<dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
+<dd><p>If <code>TRUE</code>, no message about components without response
+values is shown.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -117,6 +122,12 @@ for the selected tasks are kept. All columns of the export remain in
     <p>In Task Builder 2 a response is a row with <code>response_type</code> <code>"response"</code>.
 In Task Builder 1 it is a row from a response zone (<code>zone_type</code> starting
 with <code>response_</code>).</p>
+<p>Some components can record a response without a value, such as a
+Click Response whose objects have no response set up in 'Gorilla'. The
+clicked object is then only in <code>object</code>. When every response of a
+component in a task is empty, a message names the task and component.
+<code>response</code> is left empty, so use <code>dplyr::coalesce(response, object)</code> if the object names are
+the answers.</p>
     </div>
 
     <div class="section level2">

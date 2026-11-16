@@ -8,7 +8,7 @@ media events and other information are dropped.
 ## Usage
 
 ``` r
-gorilla_trials(x, task = NULL, all_rows = FALSE)
+gorilla_trials(x, task = NULL, all_rows = FALSE, quiet = FALSE)
 ```
 
 ## Arguments
@@ -28,6 +28,11 @@ gorilla_trials(x, task = NULL, all_rows = FALSE)
   Keep all rows of the trials, not only the responses. A column
   `response_type` then says what each row is, such as `"response"`,
   `"info"` or a zone type.
+
+- quiet:
+
+  If `TRUE`, no message about components without response values is
+  shown.
 
 ## Value
 
@@ -84,6 +89,13 @@ for the selected tasks are kept. All columns of the export remain in
 In Task Builder 2 a response is a row with `response_type` `"response"`.
 In Task Builder 1 it is a row from a response zone (`zone_type` starting
 with `response_`).
+
+Some components can record a response without a value, such as a Click
+Response whose objects have no response set up in 'Gorilla'. The clicked
+object is then only in `object`. When every response of a component in a
+task is empty, a message names the task and component. `response` is
+left empty, so use `dplyr::coalesce(response, object)` if the object
+names are the answers.
 
 ## Examples
 

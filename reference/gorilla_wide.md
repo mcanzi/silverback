@@ -38,12 +38,15 @@ names are converted to snake case.
 
 Questionnaires from Questionnaire Builder 1 and 2, downloaded in long or
 short format, give the same columns. An item that appears in more than
-one questionnaire gets the questionnaire name as a prefix. If a
-participant answered the same item more than once, for example after
-repeating a node or because two questions share a name, the later
-answers go into columns ending in `__2`, `__3` and so on. Cleaned item
-names never contain a double underscore, so these columns cannot be
-confused with items whose names end in a number.
+one questionnaire gets the questionnaire name as a prefix. Objects of
+Questionnaire Builder 2 that share a name within a questionnaire, such
+as several objects left with the default name `Rating Scale`, are
+different questions and get their object ID as a suffix, as in
+`rating_scale_object_29`. If a participant answered the same item more
+than once, for example after repeating a node or going back to a page,
+the later answers go into columns ending in `__2`, `__3` and so on.
+Cleaned item names never contain a double underscore, so these columns
+cannot be confused with items whose names end in a number.
 
 ## Examples
 

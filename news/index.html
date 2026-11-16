@@ -51,6 +51,13 @@
 <code><a href="../reference/write_gorilla.html">write_gorilla()</a></code> writes the tidy tables to CSV files.</li>
 <li>
 <code><a href="../reference/read_gorilla.html">read_gorilla()</a></code> no longer warns about parsing issues when the <code>END OF FILE</code> row has no trailing commas, as in recent exports. Other rows with the wrong number of columns give one warning that names the file.</li>
+<li>
+<code><a href="../reference/read_gorilla.html">read_gorilla()</a></code> reads files saved with tabs as separators, also when a question text in the header contains commas or line breaks, and no longer treats the <code>UTC Date</code> and <code>Local Date</code> columns of older exports as spreadsheet columns.</li>
+<li>Objects of Questionnaire Builder 2 that share a name within a questionnaire, such as several objects left as <code>Rating Scale</code>, are now kept apart by their object ID instead of being treated as repeated answers.</li>
+<li>
+<code><a href="../reference/read_eyetracking.html">read_eyetracking()</a></code> and <code><a href="../reference/read_mousetracking.html">read_mousetracking()</a></code> read the recordings of the Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2: gaze and mouse samples assigned to screen zones, the zones themselves, and the accuracy and outcome of each calibration attempt.</li>
+<li>
+<code><a href="../reference/gorilla_trials.html">gorilla_trials()</a></code> gives a message when a component, such as a Click Response without response values, recorded empty responses, and <code><a href="../reference/gorilla_checks.html">gorilla_checks()</a></code> then uses the clicked object for the <code>same_response</code> check. The <code>response</code> column itself is not changed.</li>
 </ul></div>
   </main></div>
 

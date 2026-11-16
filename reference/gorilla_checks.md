@@ -92,7 +92,8 @@ The checks are
 
   Participants who gave the same response in more than the proportion
   `max_same` of at least `min_responses` responses in a task where other
-  responses were possible.
+  responses were possible. For components that recorded no response
+  values, the object clicked or chosen counts as the response.
 
 ## See also
 

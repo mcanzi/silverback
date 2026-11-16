@@ -8,10 +8,12 @@ combined files, and from several versions of an experiment. Task data
 are reduced to one row per response with the same columns for both task
 builders. Questionnaire answers are returned with one row per
 participant, and participant information such as status, device,
-randomiser outcomes and stored values is collected in one table. A
-summary and a set of checks point out incomplete or repeated
-participation and unusual response patterns before the analysis. The
-tables can be saved as CSV files for use in other software.
+randomiser outcomes and stored values is collected in one table.
+Recordings of the eye tracking and mouse tracking components are read
+with each sample assigned to a zone of the screen. A summary and a set
+of checks point out incomplete or repeated participation and unusual
+response patterns before the analysis. The tables can be saved as CSV
+files for use in other software.
 
 ## Details
 

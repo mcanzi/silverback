@@ -68,8 +68,9 @@
     
 <p>silverback turns the files you download from the Gorilla Experiment
 Builder into three tidy tibbles: one for task responses, one for
-questionnaire answers and one for participants. A typical session looks
-like this:</p>
+questionnaire answers and one for participants. Eye tracking and mouse
+tracking recordings can be read too. A typical session looks like
+this:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mcanzi/silverback" class="external-link">silverback</a></span><span class="op">)</span></span>
 <span></span>
@@ -288,6 +289,12 @@ so the conditions are ready to use:</p>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> nonword                 723.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> word                    650.</span></span></code></pre></div>
+<p>Some components can record a response without a value: a Click
+Response whose objects have no response set up in Gorilla records only
+which object was clicked. <code><a href="../reference/gorilla_trials.html">gorilla_trials()</a></code> then gives a
+message, and the answer is in <code>object</code>.
+<code><a href="../reference/gorilla_checks.html">gorilla_checks()</a></code> uses the object for these components when
+it looks for identical responses.</p>
 <p>Leave out <code>task</code> to get the responses of all tasks in one
 table. If you need the rows around each response, such as the moment an
 audio file started, use <code>all_rows = TRUE</code>. Every column of
@@ -321,11 +328,16 @@ option, which goes into a second column ending in
 <code>_quantised</code>. Checkboxes give one column per option, such as
 <code>languages_german</code>. Questionnaires from both builders and in
 both download formats end up with the same column names.</p>
+<p>Questions are named after their object in the Questionnaire Builder.
+If several objects in one questionnaire share a name, for example
+because they kept Gorilla’s default name <code>Rating Scale</code>, they
+are still different questions, and each gets its object ID added:
+<code>rating_scale_object_29</code>, <code>rating_scale_object_33</code>
+and so on.</p>
 <p>Sometimes a participant answers an item twice. This happens after a
-repeated node, or when two questions in the same questionnaire share an
-object name. The first answer stays in the item’s column and later
-answers go into columns ending in <code>__2</code>, <code>__3</code> and
-so on.</p>
+repeated node, or when someone goes back a page and submits it again.
+The first answer stays in the item’s column and later answers go into
+columns ending in <code>__2</code>, <code>__3</code> and so on.</p>
 </div>
 <div class="section level2">
 <h2 id="get-one-row-per-participant-for-everything-else">Get one row per participant for everything else<a class="anchor" aria-label="anchor" href="#get-one-row-per-participant-for-everything-else"></a>
@@ -381,13 +393,40 @@ questionnaire and the randomiser group are added to each response:</p>
 <p>All three can go straight into dplyr or ggplot2.</p>
 </div>
 <div class="section level2">
+<h2 id="eye-tracking-and-mouse-tracking">Eye tracking and mouse tracking<a class="anchor" aria-label="anchor" href="#eye-tracking-and-mouse-tracking"></a>
+</h2>
+<p>The Eye Tracking (Webgazer) and Mouse Tracking components of Task
+Builder 2 do not put their recordings in the main export. Gorilla saves
+one file per trial instead, named like
+<code>123456-3-9100037-task-ab12-50000037-collection-10-2.csv</code>.
+<code><a href="../reference/read_eyetracking.html">read_eyetracking()</a></code> and <code><a href="../reference/read_mousetracking.html">read_mousetracking()</a></code>
+read them from the same folder or ZIP file:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">eye</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_eyetracking.html">read_eyetracking</a></span><span class="op">(</span><span class="st">"data"</span>, x <span class="op">=</span> <span class="va">g</span><span class="op">)</span></span>
+<span><span class="va">eye</span><span class="op">$</span><span class="va">gaze</span>         <span class="co"># one row per gaze sample</span></span>
+<span><span class="va">eye</span><span class="op">$</span><span class="va">zones</span>        <span class="co"># the zones of each screen</span></span>
+<span><span class="va">eye</span><span class="op">$</span><span class="va">calibration</span>  <span class="co"># one row per calibration point and attempt</span></span>
+<span><span class="va">mouse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_mousetracking.html">read_mousetracking</a></span><span class="op">(</span><span class="st">"data"</span>, x <span class="op">=</span> <span class="va">g</span><span class="op">)</span></span>
+<span><span class="va">mouse</span><span class="op">$</span><span class="va">mouse</span>      <span class="co"># one row per mouse sample</span></span></code></pre></div>
+<p>Positions are on a scale from 0 to 1 across the task area, with the
+origin at the bottom left. Each sample is assigned to the zone it falls
+in, and where zones overlap the smallest one wins;
+<code>zones = "Picture"</code> limits the assignment to zones with that
+name. The recordings do not say which task they belong to, so pass the
+main export as <code>x</code> to add <code>task_name</code> and the
+screen name. The samples can then be joined to
+<code><a href="../reference/gorilla_trials.html">gorilla_trials()</a></code> by <code>participant_private_id</code>,
+<code>tree_node_key</code>, <code>display</code>, <code>trial</code> and
+<code>screen</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="before-sharing-the-data">Before sharing the data<a class="anchor" aria-label="anchor" href="#before-sharing-the-data"></a>
 </h2>
 <p>If you recruited through a platform such as Prolific, the <span class="hl">public IDs</span> are the platform’s IDs and can identify
 people. <code><a href="../reference/blind_ids.html">blind_ids()</a></code> replaces them, the external session IDs
 and the completion codes with codes such as <code>P001</code>,
 consistently across all tables:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/blind_ids.html">blind_ids</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gorilla_participants.html">gorilla_participants</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">participant_private_id</span>, <span class="va">participant_public_id</span><span class="op">)</span></span>
@@ -409,7 +448,7 @@ email addresses, so check the questionnaires before you share them.</p>
 </h2>
 <p>To continue the analysis in other software, or to share the data,
 <code><a href="../reference/write_gorilla.html">write_gorilla()</a></code> writes the tables to a folder of <span class="hl">CSV files</span>:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"tidy"</span><span class="op">)</span></span>
 <span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/write_gorilla.html">write_gorilla</a></span><span class="op">(</span><span class="fu"><a href="../reference/blind_ids.html">blind_ids</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span>, <span class="va">out</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/basename.html" class="external-link">basename</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span>

@@ -7,6 +7,13 @@
 - [`gorilla_example()`](https://mcanzi.de/silverback/reference/gorilla_example.md)
   : Path to the example exports
 
+## Eye and mouse tracking
+
+- [`read_eyetracking()`](https://mcanzi.de/silverback/reference/read_eyetracking.md)
+  : Read eye tracking data
+- [`read_mousetracking()`](https://mcanzi.de/silverback/reference/read_mousetracking.md)
+  : Read mouse tracking data
+
 ## Tidy tables
 
 - [`gorilla_trials()`](https://mcanzi.de/silverback/reference/gorilla_trials.md)

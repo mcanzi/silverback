@@ -2,8 +2,8 @@
 
 silverback turns the files you download from the Gorilla Experiment
 Builder into three tidy tibbles: one for task responses, one for
-questionnaire answers and one for participants. A typical session looks
-like this:
+questionnaire answers and one for participants. Eye tracking and mouse
+tracking recordings can be read too. A typical session looks like this:
 
 ``` r
 
@@ -209,6 +209,15 @@ ld |>
 #> 2 word                    650.
 ```
 
+Some components can record a response without a value: a Click Response
+whose objects have no response set up in Gorilla records only which
+object was clicked.
+[`gorilla_trials()`](https://mcanzi.de/silverback/reference/gorilla_trials.md)
+then gives a message, and the answer is in `object`.
+[`gorilla_checks()`](https://mcanzi.de/silverback/reference/gorilla_checks.md)
+uses the object for these components when it looks for identical
+responses.
+
 Leave out `task` to get the responses of all tasks in one table. If you
 need the rows around each response, such as the moment an audio file
 started, use `all_rows = TRUE`. Every column of the export, including
@@ -244,10 +253,16 @@ second column ending in `_quantised`. Checkboxes give one column per
 option, such as `languages_german`. Questionnaires from both builders
 and in both download formats end up with the same column names.
 
+Questions are named after their object in the Questionnaire Builder. If
+several objects in one questionnaire share a name, for example because
+they kept Gorilla’s default name `Rating Scale`, they are still
+different questions, and each gets its object ID added:
+`rating_scale_object_29`, `rating_scale_object_33` and so on.
+
 Sometimes a participant answers an item twice. This happens after a
-repeated node, or when two questions in the same questionnaire share an
-object name. The first answer stays in the item’s column and later
-answers go into columns ending in `__2`, `__3` and so on.
+repeated node, or when someone goes back a page and submits it again.
+The first answer stays in the item’s column and later answers go into
+columns ending in `__2`, `__3` and so on.
 
 ## Get one row per participant for everything else
 
@@ -309,6 +324,37 @@ ld |>
 ```
 
 All three can go straight into dplyr or ggplot2.
+
+## Eye tracking and mouse tracking
+
+The Eye Tracking (Webgazer) and Mouse Tracking components of Task
+Builder 2 do not put their recordings in the main export. Gorilla saves
+one file per trial instead, named like
+`123456-3-9100037-task-ab12-50000037-collection-10-2.csv`.
+[`read_eyetracking()`](https://mcanzi.de/silverback/reference/read_eyetracking.md)
+and
+[`read_mousetracking()`](https://mcanzi.de/silverback/reference/read_mousetracking.md)
+read them from the same folder or ZIP file:
+
+``` r
+
+eye <- read_eyetracking("data", x = g)
+eye$gaze         # one row per gaze sample
+eye$zones        # the zones of each screen
+eye$calibration  # one row per calibration point and attempt
+mouse <- read_mousetracking("data", x = g)
+mouse$mouse      # one row per mouse sample
+```
+
+Positions are on a scale from 0 to 1 across the task area, with the
+origin at the bottom left. Each sample is assigned to the zone it falls
+in, and where zones overlap the smallest one wins; `zones = "Picture"`
+limits the assignment to zones with that name. The recordings do not say
+which task they belong to, so pass the main export as `x` to add
+`task_name` and the screen name. The samples can then be joined to
+[`gorilla_trials()`](https://mcanzi.de/silverback/reference/gorilla_trials.md)
+by `participant_private_id`, `tree_node_key`, `display`, `trial` and
+`screen`.
 
 ## Before sharing the data
 
