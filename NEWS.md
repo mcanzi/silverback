@@ -35,3 +35,13 @@
   check. The `response` column itself is not changed.
 * `read_gorilla()` reads Excel downloads (`.xlsx`) and gives the same tables
   as for CSV downloads. It warns when the same file is read in both formats.
+* `read_gorilla()` reads CSV files saved in Windows-1252 (with a warning) or
+  UTF-16, skips empty 0-byte files, and warns when the same events appear in
+  more than one file, as after downloading or copying a file twice, or when
+  a column name appears twice in a file. A file that is not text gives a
+  plain error.
+* Exports without the status, task name or timestamp columns no longer stop
+  `print()`, `summary()`, `gorilla_checks()` or `write_gorilla()`, and
+  `write_gorilla(by_task = TRUE)` keeps trials without a task name in
+  `trials_unknown_task.csv`. Writing data without any rows writes nothing.
+* Arguments of the wrong type give clear errors in all functions.

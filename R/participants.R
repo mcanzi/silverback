@@ -12,10 +12,9 @@ build_participants <- function(metas) {
                   "participant_viewport_size", "local_timezone")
   last_cols <- c("experiment_version", "participant_status", "checkpoint")
   node_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")_")
-  meta <- meta |> dplyr::rename_with(clean_names)
-  if (!"task_name" %in% names(meta)) meta$task_name <- NA_character_
-  if (!"utc_timestamp" %in% names(meta)) meta$utc_timestamp <- NA_character_
   meta <- meta |>
+    dplyr::rename_with(clean_names) |>
+    add_missing(c("task_name", "utc_timestamp", "participant_status")) |>
     dplyr::filter(!is.na(participant_private_id)) |>
     dplyr::mutate(time = as_num(utc_timestamp)) |>
     dplyr::arrange(participant_private_id, time)
@@ -60,6 +59,7 @@ build_participants <- function(metas) {
 #' @export
 gorilla_participants <- function(x, status = NULL) {
   check_gorilla(x)
+  check_names(status, "status")
   p <- x$participants
   if (!is.null(status)) p <- p |> dplyr::filter(participant_status %in% status)
   p

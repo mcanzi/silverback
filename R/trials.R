@@ -55,6 +55,9 @@
 #' @export
 gorilla_trials <- function(x, task = NULL, all_rows = FALSE, quiet = FALSE) {
   check_gorilla(x)
+  check_names(task, "task")
+  check_flag(all_rows, "all_rows")
+  check_flag(quiet, "quiet")
   d <- x$tasks
   if (is.null(d)) stop("The data contain no tasks.", call. = FALSE)
   if (!is.null(task)) {

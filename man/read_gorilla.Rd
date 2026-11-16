@@ -44,15 +44,23 @@ same tables as the CSV download. Some Excel downloads store numbers as
 numbers, though, and a code such as \code{007} saved that way has already lost
 its leading zeros in the file. Download CSV files if such codes matter.
 
-Files from Task Builder 1 and 2 and from Questionnaire Builder 1 and 2
-can be mixed, and so can files from several versions of the experiment.
-The \verb{END OF FILE} row at the end of each file is removed, and files from
-nodes that no participant reached, which hold no data, are skipped. Files
-that were opened in a spreadsheet program and saved again with semicolons
-or tabs as separators are read too. If the files include both kinds of
-download, or the same file as CSV and as Excel, a warning says so,
-because the same rows would then be read twice. Lines with the wrong number of columns, as in a file that was cut
-off or edited by hand, also give a warning.
+Files from Task Builder 1 and 2 and from Questionnaire Builder 1 and 2 can
+be mixed, and so can files from several versions of the experiment. The
+\verb{END OF FILE} row at the end of each file is removed, and files from nodes
+that no participant reached, which hold no data, are skipped. Files that
+were opened in a spreadsheet program and saved again are read too: with
+semicolons or tabs as separators, in the Windows-1252 encoding, or as
+Unicode text (UTF-16 with a byte order mark, as Excel saves it). A file
+that is not UTF-8 is read as Windows-1252 with a warning, because other
+encodings cannot always be told apart from it.
+
+Some problems give a warning, because the tables may not be what you
+expect: the same events in more than one file, as after reading both kinds
+of download, a file as CSV and as Excel or a second copy of a download;
+lines with the wrong number of columns, as in a file that was cut off or
+edited by hand; and a column name that appears twice in a file, as when a
+Task Builder 1 spreadsheet has a column with the same name as a column of
+the export.
 
 Column names are converted to snake case: \verb{Participant Private ID}
 becomes \code{participant_private_id}, \code{Spreadsheet: Speaker} becomes

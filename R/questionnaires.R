@@ -145,6 +145,8 @@ merge_quantised <- function(long) {
 #' @export
 gorilla_wide <- function(x, task = NULL, quantised = TRUE) {
   check_gorilla(x)
+  check_names(task, "task")
+  check_flag(quantised, "quantised")
   q <- x$questionnaires
   if (is.null(q)) stop("The data contain no questionnaires.", call. = FALSE)
   if (!is.null(task)) {

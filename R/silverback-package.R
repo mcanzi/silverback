@@ -7,6 +7,7 @@
 "_PACKAGE"
 
 utils::globalVariables(c(
+  ".file",
   "area",
   "attempt",
   "bottom",
@@ -20,6 +21,7 @@ utils::globalVariables(c(
   "did",
   "empty",
   "end",
+  "event_index",
   "experiment_version",
   "file",
   "hit_id",

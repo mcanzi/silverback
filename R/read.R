@@ -34,15 +34,23 @@ node_col_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")-")
 #' numbers, though, and a code such as `007` saved that way has already lost
 #' its leading zeros in the file. Download CSV files if such codes matter.
 #'
-#' Files from Task Builder 1 and 2 and from Questionnaire Builder 1 and 2
-#' can be mixed, and so can files from several versions of the experiment.
-#' The `END OF FILE` row at the end of each file is removed, and files from
-#' nodes that no participant reached, which hold no data, are skipped. Files
-#' that were opened in a spreadsheet program and saved again with semicolons
-#' or tabs as separators are read too. If the files include both kinds of
-#' download, or the same file as CSV and as Excel, a warning says so,
-#' because the same rows would then be read twice. Lines with the wrong number of columns, as in a file that was cut
-#' off or edited by hand, also give a warning.
+#' Files from Task Builder 1 and 2 and from Questionnaire Builder 1 and 2 can
+#' be mixed, and so can files from several versions of the experiment. The
+#' `END OF FILE` row at the end of each file is removed, and files from nodes
+#' that no participant reached, which hold no data, are skipped. Files that
+#' were opened in a spreadsheet program and saved again are read too: with
+#' semicolons or tabs as separators, in the Windows-1252 encoding, or as
+#' Unicode text (UTF-16 with a byte order mark, as Excel saves it). A file
+#' that is not UTF-8 is read as Windows-1252 with a warning, because other
+#' encodings cannot always be told apart from it.
+#'
+#' Some problems give a warning, because the tables may not be what you
+#' expect: the same events in more than one file, as after reading both kinds
+#' of download, a file as CSV and as Excel or a second copy of a download;
+#' lines with the wrong number of columns, as in a file that was cut off or
+#' edited by hand; and a column name that appears twice in a file, as when a
+#' Task Builder 1 spreadsheet has a column with the same name as a column of
+#' the export.
 #'
 #' Column names are converted to snake case: `Participant Private ID`
 #' becomes `participant_private_id`, `Spreadsheet: Speaker` becomes
@@ -85,6 +93,7 @@ node_col_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")-")
 #' g$files
 #' @export
 read_gorilla <- function(path, quiet = FALSE) {
+  check_flag(quiet, "quiet")
   tmp <- tempfile("silverback")
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   files <- find_gorilla_files(path, tmp)
@@ -98,7 +107,9 @@ read_gorilla <- function(path, quiet = FALSE) {
   info <- parsed |> purrr::map("info") |> dplyr::bind_rows()
   combined <- stringr::str_detect(info$file, "_(tasks|questionnaires)\\.(csv|xlsx)$")
   per_node <- stringr::str_detect(info$file, "_(task|questionnaire)-[a-z0-9]+\\.(csv|xlsx)$")
+  warned <- FALSE
   if (any(combined & info$rows > 0L) && any(per_node & info$rows > 0L)) {
+    warned <- TRUE
     warning("The files include both combined downloads (",
             info$file[combined] |> paste(collapse = ", "),
             ") and files for single nodes. The same rows are probably read twice; ",
@@ -107,9 +118,16 @@ read_gorilla <- function(path, quiet = FALSE) {
   stem <- stringr::str_remove(info$file, "\\.(csv|xlsx)$")
   twice <- unique(stem[duplicated(stem) & info$rows > 0L])
   if (length(twice)) {
+    warned <- TRUE
     warning("These files were read both as CSV and as Excel: ",
             paste(twice, collapse = ", "), ". The same rows are read twice; ",
             "read one format only.", call. = FALSE)
+  }
+  overlap <- if (!warned) shared_event_files(purrr::map(parsed, "meta"), info$file)
+  if (length(overlap)) {
+    warning("The same events appear in more than one file: ",
+            paste(overlap, collapse = ", "), ". The data were probably downloaded or ",
+            "copied twice; read each file only once.", call. = FALSE)
   }
   empty <- info$rows == 0L
   if (any(empty) && !quiet) {
@@ -119,7 +137,9 @@ read_gorilla <- function(path, quiet = FALSE) {
   }
   tasks <- parsed |> purrr::map("task") |> bind()
   if (!is.null(tasks)) {
-    tasks <- tasks |> convert_types(keep = c(id_cols, "response", "trial_number"))
+    tasks <- tasks |>
+      add_missing(c("participant_private_id", "tree_node_key", "task_name", "utc_timestamp")) |>
+      convert_types(keep = c(id_cols, "response", "trial_number"))
   }
   questionnaires <- parsed |> purrr::map("questionnaire") |> bind()
   if (!is.null(questionnaires)) {
@@ -176,20 +196,42 @@ parse_file_name <- function(file) {
        node = if (is.na(m[1, 6])) NA_character_ else paste0(kind, "-", m[1, 6]))
 }
 
-# Gorilla writes commas. Files saved again from a spreadsheet program may use
-# semicolons or tabs instead. Column names rarely contain these characters,
-# so the one that occurs most often on the first line is the separator.
-detect_delim <- function(file) {
-  first <- readLines(file, n = 1L, warn = FALSE)
-  if (length(first) == 0L) return(",")
+# Gorilla writes UTF-8 with commas. Files saved again from a spreadsheet
+# program may be Windows-1252 or UTF-16 and use semicolons or tabs. Column
+# names rarely contain these characters, so the one that occurs most often on
+# the first line is the separator.
+text_format <- function(file) {
+  bytes <- readBin(file, "raw", file.size(file))
+  bom <- if (length(bytes) >= 2L) bytes[1:2] else raw()
+  if (identical(bom, as.raw(c(0xff, 0xfe))) || identical(bom, as.raw(c(0xfe, 0xff)))) {
+    encoding <- if (bom[1L] == as.raw(0xff)) "UTF-16LE" else "UTF-16BE"
+    text <- iconv(list(bytes[-(1:2)]), encoding, "UTF-8")
+  } else {
+    # rawToChar() refuses bytes with embedded nuls, which text never has.
+    text <- tryCatch(rawToChar(bytes), error = function(e) {
+      stop(basename(file), " is not a text file.", call. = FALSE)
+    })
+    encoding <- "UTF-8"
+    if (!validUTF8(text)) {
+      encoding <- "windows-1252"
+      text <- iconv(text, encoding, "UTF-8")
+      warning(basename(file), " is not UTF-8, the encoding 'Gorilla' uses, and was read ",
+              "as Windows-1252 (Latin-1), as saved by spreadsheet programs on Windows. ",
+              "Check that special characters look right.", call. = FALSE)
+    }
+  }
+  first <- if (is.na(text)) "" else stringr::str_extract(text, "^[^\r\n]*")
   candidates <- c(",", ";", "\t")
   counts <- stringr::str_count(first, stringr::fixed(candidates))
-  if (all(counts == 0L)) "," else candidates[which.max(counts)]
+  list(encoding = encoding, delim = if (all(counts == 0L)) "," else candidates[which.max(counts)])
 }
 
-read_csv_chr <- function(file, delim = detect_delim(file)) {
+detect_delim <- function(file) text_format(file)$delim
+
+read_csv_chr <- function(file, format = text_format(file)) {
   df <- withCallingHandlers(
-    readr::read_delim(file, delim = delim,
+    readr::read_delim(file, delim = format$delim,
+                      locale = readr::locale(encoding = format$encoding),
                       col_types = readr::cols(.default = readr::col_character()),
                       na = "", trim_ws = FALSE, name_repair = "minimal",
                       progress = FALSE, lazy = FALSE),
@@ -243,6 +285,16 @@ detect_builder <- function(cols, kind) {
 
 read_gorilla_file <- function(file) {
   raw <- read_table_chr(file)
+  dup <- unique(names(raw)[duplicated(names(raw))])
+  if (length(dup)) {
+    names(raw) <- make.unique(names(raw), sep = " ")
+    warning(basename(file), ": ", paste0("`", dup, "`", collapse = ", "),
+            if (length(dup) > 1L) " are column names that appear" else
+              " is a column name that appears",
+            " more than once. Later copies get a number, as in `", dup[1L], " 1`.",
+            call. = FALSE)
+  }
+  if (ncol(raw) == 0L) raw <- tibble::tibble(`Participant Private ID` = character())
   if (!"Participant Private ID" %in% names(raw)) {
     stop(basename(file), " does not look like a Gorilla export: it has no ",
          "`Participant Private ID` column.", call. = FALSE)

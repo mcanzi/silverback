@@ -18,5 +18,11 @@
 #' @export
 gorilla_example <- function(file = NULL) {
   dir <- system.file("extdata", "example", package = "silverback", mustWork = TRUE)
-  if (is.null(file)) dir else file.path(dir, file)
+  if (is.null(file)) return(dir)
+  path <- file.path(dir, file)
+  if (!all(file.exists(path))) {
+    stop("No example file named ", paste(file[!file.exists(path)], collapse = ", "),
+         ". See `list.files(gorilla_example())`.", call. = FALSE)
+  }
+  path
 }

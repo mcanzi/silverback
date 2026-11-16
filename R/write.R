@@ -31,17 +31,24 @@
 #' @export
 write_gorilla <- function(x, path, by_task = FALSE, overwrite = FALSE) {
   check_gorilla(x)
+  check_flag(by_task, "by_task")
+  check_flag(overwrite, "overwrite")
   if (!is.character(path) || length(path) != 1L || is.na(path)) {
     stop("`path` must be a single folder name.", call. = FALSE)
+  }
+  if (file.exists(path) && !dir.exists(path)) {
+    stop("`path` is a file, not a folder: ", path, call. = FALSE)
   }
   tables <- list(participants = gorilla_participants(x))
   if (!is.null(x$tasks)) {
     trials <- gorilla_trials(x, quiet = TRUE)
     if (by_task) {
-      tasks <- trials$task_name |> unique() |> stats::na.omit() |> as.character()
-      files <- paste0("trials_", clean_names(tasks))
+      # Rows without a task name, from exports without that column, still get
+      # a file.
+      tasks <- unique(trials$task_name)
+      files <- paste0("trials_", clean_names(dplyr::coalesce(tasks, "unknown task")))
       tables[files] <- tasks |>
-        purrr::map(\(t) trials |> dplyr::filter(task_name == t) |> drop_empty_cols())
+        purrr::map(\(t) trials |> dplyr::filter(task_name %in% t) |> drop_empty_cols())
     } else {
       tables$trials <- trials
     }
@@ -49,6 +56,11 @@ write_gorilla <- function(x, path, by_task = FALSE, overwrite = FALSE) {
   if (!is.null(x$questionnaires)) {
     tables$questionnaires <- gorilla_wide(x)
     tables$questionnaires_long <- x$questionnaires
+  }
+  tables <- purrr::compact(tables)
+  if (length(tables) == 0L) {
+    message("Nothing to write: the data are empty.")
+    return(invisible(character()))
   }
   files <- file.path(path, paste0(names(tables), ".csv"))
   existing <- files[file.exists(files)]

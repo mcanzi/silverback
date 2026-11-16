@@ -13,12 +13,14 @@ findings <- function(check, detail, participant_private_id = NA_character_,
 #' The checks are
 #' \describe{
 #'   \item{status}{Participants whose status is not `complete`, such as live
-#'     or rejected participants included by hand.}
+#'     or rejected participants included by hand. Skipped if the export has
+#'     no status column.}
 #'   \item{versions}{Data from more than one version of the experiment.}
 #'   \item{duplicate}{The same public ID under several private IDs, which
 #'     usually means that someone took part more than once.}
 #'   \item{missing_task}{Participants who did not do a task that most
-#'     participants with the same randomiser and branch outcomes did.}
+#'     participants with the same outcomes of randomiser, branch, order,
+#'     counterbalance and allocator nodes did.}
 #'   \item{unbalanced}{Randomiser nodes whose groups differ in size by more
 #'     than the ratio `balance`.}
 #'   \item{device}{Participants who used a different type of device from
@@ -54,10 +56,17 @@ findings <- function(check, detail, participant_private_id = NA_character_,
 gorilla_checks <- function(x, fast = 200, max_fast = 0.1, max_same = 0.9,
                            min_responses = 10, balance = 1.5) {
   check_gorilla(x)
+  check_number(fast, "fast", min = 0)
+  check_number(max_fast, "max_fast", min = 0, max = 1)
+  check_number(max_same, "max_same", min = 0, max = 1)
+  check_number(min_responses, "min_responses", min = 0)
+  check_number(balance, "balance", min = 1)
   p <- x$participants
   out <- list()
   if (!is.null(p)) {
-    incomplete <- p |> dplyr::filter(!participant_status %in% "complete")
+    # Without a status column in the export there is nothing to check.
+    incomplete <- p |>
+      dplyr::filter(any(!is.na(participant_status)), !participant_status %in% "complete")
     out$status <- findings(check = "status",
                            detail = paste0("status is ", incomplete$participant_status),
                            participant_private_id = incomplete$participant_private_id)
@@ -125,7 +134,7 @@ gorilla_checks <- function(x, fast = 200, max_fast = 0.1, max_same = 0.9,
     out$missing <- findings(
       check = "missing_task",
       detail = paste0("not done, although ", missing$did, " of ", missing$size,
-                      " participants with the same randomiser and branch outcomes did it"),
+                      " participants with the same node outcomes did it"),
       participant_private_id = missing$participant_private_id,
       task_name = missing$task_name
     )

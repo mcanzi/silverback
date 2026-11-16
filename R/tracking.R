@@ -67,6 +67,8 @@
 #' @export
 read_eyetracking <- function(path, x = NULL, zones = NULL, quiet = FALSE) {
   if (!is.null(x)) check_gorilla(x)
+  check_names(zones, "zones")
+  check_flag(quiet, "quiet")
   parts <- read_tracking(path, "-(collection|calibration)-", c("collection", "calibration"),
                          quiet = quiet)
   gaze <- NULL
@@ -146,6 +148,8 @@ read_eyetracking <- function(path, x = NULL, zones = NULL, quiet = FALSE) {
 #' @export
 read_mousetracking <- function(path, x = NULL, zones = NULL, quiet = FALSE) {
   if (!is.null(x)) check_gorilla(x)
+  check_names(zones, "zones")
+  check_flag(quiet, "quiet")
   parts <- read_tracking(path, "-mousetracking-", "mousetracking", quiet = quiet)
   d <- parts$mousetracking
   zone_table <- tracking_zones(d, x)

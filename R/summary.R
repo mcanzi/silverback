@@ -34,8 +34,11 @@ share <- function(v) if (length(v)) v |> mean(na.rm = TRUE) |> round(3) else NA_
 #' summary(g)$tasks
 #' @export
 summary.gorilla_data <- function(object, fast = 200, slow = 10000, ...) {
+  check_gorilla(object)
+  check_number(fast, "fast", min = 0)
+  check_number(slow, "slow", min = 0)
   out <- list(tasks = NULL, questionnaires = NULL)
-  if (!is.null(object$tasks)) {
+  if (!is.null(object$tasks) && nrow(object$tasks) > 0L) {
     tr <- gorilla_trials(object, quiet = TRUE)
     tasks <- object$tasks |>
       dplyr::summarise(
@@ -68,7 +71,7 @@ summary.gorilla_data <- function(object, fast = 200, slow = 10000, ...) {
                     responses_max = dplyr::coalesce(responses_max, 0L)) |>
       dplyr::arrange(task_name)
   }
-  if (!is.null(object$questionnaires)) {
+  if (!is.null(object$questionnaires) && nrow(object$questionnaires) > 0L) {
     q <- object$questionnaires
     answered <- q |>
       dplyr::filter(!is.na(response), response != "") |>

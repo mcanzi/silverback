@@ -23,6 +23,7 @@ blind_ids <- function(x, columns = c("participant_public_id",
                                      "participant_external_session_id",
                                      "participant_completion_code")) {
   check_gorilla(x)
+  check_names(columns, "columns")
   ids <- x$participants$participant_private_id
   code <- sprintf(paste0("P%0", max(3L, nchar(length(ids))), "d"), seq_along(ids))
   recode <- function(v, id) {

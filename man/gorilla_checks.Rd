@@ -42,12 +42,14 @@ so you decide what to exclude.
 The checks are
 \describe{
 \item{status}{Participants whose status is not \code{complete}, such as live
-or rejected participants included by hand.}
+or rejected participants included by hand. Skipped if the export has
+no status column.}
 \item{versions}{Data from more than one version of the experiment.}
 \item{duplicate}{The same public ID under several private IDs, which
 usually means that someone took part more than once.}
 \item{missing_task}{Participants who did not do a task that most
-participants with the same randomiser and branch outcomes did.}
+participants with the same outcomes of randomiser, branch, order,
+counterbalance and allocator nodes did.}
 \item{unbalanced}{Randomiser nodes whose groups differ in size by more
 than the ratio \code{balance}.}
 \item{device}{Participants who used a different type of device from
