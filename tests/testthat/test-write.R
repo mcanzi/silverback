@@ -1,0 +1,35 @@
+test_that("write_gorilla writes one file per table", {
+  g <- read_gorilla(gorilla_example(), quiet = TRUE)
+  out <- file.path(tempfile(), "csv")
+  files <- write_gorilla(g, out)
+  expect_equal(basename(files), c("participants.csv", "trials.csv", "questionnaires.csv",
+                                  "questionnaires_long.csv"))
+  trials <- readr::read_csv(files[2], show_col_types = FALSE)
+  expect_equal(nrow(trials), nrow(gorilla_trials(g)))
+  expect_equal(names(trials), names(gorilla_trials(g)))
+  participants <- readr::read_csv(files[1], show_col_types = FALSE)
+  expect_equal(nrow(participants), nrow(gorilla_participants(g)))
+  wide <- readr::read_csv(files[3], show_col_types = FALSE)
+  expect_equal(nrow(wide), nrow(gorilla_wide(g)))
+  expect_false(any(grepl(",NA,", readLines(files[2]))))
+})
+
+test_that("write_gorilla can split trials by task and refuses to overwrite", {
+  g <- read_gorilla(gorilla_example(), quiet = TRUE)
+  out <- tempfile()
+  write_gorilla(g, out)
+  expect_error(write_gorilla(g, out), "exist already")
+  files <- write_gorilla(g, out, by_task = TRUE, overwrite = TRUE)
+  expect_true(all(c("trials_lexical_decision.csv", "trials_rhyme_judgement.csv") %in% basename(files)))
+  rhyme <- readr::read_csv(file.path(out, "trials_rhyme_judgement.csv"), show_col_types = FALSE)
+  expect_false("spreadsheet_word" %in% names(rhyme))
+  expect_error(write_gorilla(g, c("a", "b")), "single folder")
+})
+
+test_that("write_gorilla skips tables the export does not have", {
+  dir <- tempfile()
+  dir.create(dir)
+  file.copy(gorilla_example("data_exp_123456-v3_task-rh7p.csv"), dir)
+  files <- write_gorilla(read_gorilla(dir, quiet = TRUE), file.path(dir, "out"))
+  expect_equal(basename(files), c("participants.csv", "trials.csv"))
+})

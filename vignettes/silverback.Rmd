@@ -1,0 +1,169 @@
+---
+title: "Getting started with silverback"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with silverback}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(tibble.print_max = 6, tibble.print_min = 6)
+```
+
+silverback turns the files you download from the Gorilla Experiment Builder into three tidy tibbles: one for task responses, one for questionnaire answers and one for participants. A typical session looks like this:
+
+```{r, eval = FALSE}
+library(silverback)
+
+g <- read_gorilla("data_exp_123456-v3.zip")
+gorilla_checks(g)
+trials <- gorilla_trials(g)
+answers <- gorilla_wide(g)
+people <- gorilla_participants(g)
+write_gorilla(g, "tidy")
+```
+
+The rest of this page goes through each step with a small invented experiment that comes with the package.
+
+```{r}
+library(silverback)
+library(dplyr, warn.conflicts = FALSE)
+```
+
+## Download the data from Gorilla
+
+On the Data tab of your experiment, generate the data for the versions you need and download it. Gorilla offers two layouts, [one file per node]{.hl} of the experiment tree or [combined files]{.hl} with all tasks in one file and all questionnaires in another. Either works as long as you choose CSV. Questionnaires can be downloaded in long or short format.
+
+Unzip the download or leave it as it is. `read_gorilla()` accepts the ZIP file, the folder or single CSV files. Keep one layout per folder: with both, the same rows would be read twice, and `read_gorilla()` warns about it.
+
+## Read the files
+
+The example experiment has a lexical decision task made with Task Builder 2, a rhyme judgement task made with Task Builder 1, a consent form made with Questionnaire Builder 1 and a background questionnaire made with Questionnaire Builder 2. One branch of the experiment was never reached, so one of the files is empty.
+
+```{r}
+g <- read_gorilla(gorilla_example())
+g
+```
+
+The printout lists the tasks and questionnaires that were found and how many participants did each. Empty files are skipped with a message.
+
+`read_gorilla()` returns a list of four tables. `g$files` has one row per file and says which [builder]{.hl} each file comes from. `g$tasks` keeps every row of every task file, `g$questionnaires` holds one row per questionnaire answer and `g$participants` one row per participant. You will rarely need the first two directly.
+
+```{r}
+g$files
+```
+
+Column names are converted to [snake case]{.hl}, so `Participant Private ID` becomes `participant_private_id`. Columns that come from your spreadsheets start with `spreadsheet_`, and values saved to the [store]{.hl} start with `store_`. Task Builder 1 exports give spreadsheet columns no prefix at all, and silverback adds it so that both builders look the same.
+
+## Check the data
+
+Before the analysis it is worth looking at what came in. `summary()` gives one line per task and questionnaire:
+
+```{r}
+summary(g)
+```
+
+For tasks, the line shows how many responses each participant gave, the share Gorilla marked as correct, the median reaction time and how long people spent on the task. That share only means something if scoring was set up in Gorilla. For questionnaires, it shows how many items were left unanswered.
+
+`gorilla_checks()` goes further and lists findings about single participants:
+
+```{r}
+gorilla_checks(g)
+```
+
+In the example one participant stopped during the lexical decision task. The checks report the status and the missing rhyme judgement task. On real data they also find people who took part twice under the same public ID, who pressed the same key almost every time, who often answered faster than 200 ms, or who used a different type of device from most participants. Randomiser groups of very different sizes are reported too. You can change the thresholds with the function's arguments. Nothing is removed, so you decide what to exclude.
+
+## Get one row per response
+
+Task files hold far more rows than responses. Instructions, fixation crosses, continue buttons and audio events all get rows of their own. `gorilla_trials()` keeps only the rows with a response:
+
+```{r}
+ld <- gorilla_trials(g, task = "Lexical decision")
+ld
+```
+
+The first columns are the same for every task, whichever builder it was made with. The table below lists them.
+
+| Column | Content |
+|---|---|
+| `participant_private_id` | Gorilla's ID for the participant |
+| `experiment_version`, `tree_node_key`, `repeat_key` | where in the experiment the response was given |
+| `task_name`, `task_version` | the task and its version |
+| `spreadsheet`, `trial` | the spreadsheet and trial number |
+| `display`, `screen` | the display and screen (Task Builder 1 has no displays) |
+| `component`, `object` | what recorded the response (zone type and zone name in Task Builder 1) |
+| `response`, `rt`, `correct` | the response, the reaction time in ms and whether it was correct |
+| `time` | when the response was given, in UTC |
+
+Next come the [timing columns]{.hl} that Gorilla recorded for the responses, such as `onset_time` and `response_duration` in Task Builder 2 or `reaction_onset` in Task Builder 1. Columns without values are left out. The invented example has no timing data, so these columns are missing below. The spreadsheet and store columns of the task follow, so the conditions are ready to use:
+
+```{r}
+ld |>
+  filter(correct) |>
+  summarise(rt = median(rt), .by = spreadsheet_lexicality)
+```
+
+Leave out `task` to get the responses of all tasks in one table. If you need the rows around each response, such as the moment an audio file started, use `all_rows = TRUE`. Every column of the export, including the metadata left out here, remains in `g$tasks`.
+
+## Get one row per participant for questionnaires
+
+`gorilla_wide()` puts each questionnaire item in its own column:
+
+```{r}
+answers <- gorilla_wide(g)
+answers
+```
+
+Dropdowns, multiple choice questions and Likert scales also have a [quantised value]{.hl}, the position of the chosen option, which goes into a second column ending in `_quantised`. Checkboxes give one column per option, such as `languages_german`. Questionnaires from both builders and in both download formats end up with the same column names.
+
+Sometimes a participant answers an item twice. This happens after a repeated node, or when two questions in the same questionnaire share an object name. The first answer stays in the item's column and later answers go into columns ending in `__2`, `__3` and so on.
+
+## Get one row per participant for everything else
+
+`gorilla_participants()` collects what Gorilla records about each person:
+
+```{r}
+people <- gorilla_participants(g)
+people
+```
+
+Each row has the participant's status, device, operating system and browser. It also has the times of the first and last event with the minutes in between, the group that each [randomiser]{.hl} or branch node assigned, and the last value of each store field. Columns that are empty for everybody are dropped. `status = "complete"` keeps only participants who finished.
+
+## Put the tables together
+
+The three tables share `participant_private_id`, so they can be joined with `left_join()`. Here the background questionnaire and the randomiser group are added to each response:
+
+```{r}
+ld |>
+  left_join(select(answers, participant_private_id, age, gender), by = "participant_private_id") |>
+  left_join(select(people, participant_private_id, randomiser_ab12), by = "participant_private_id") |>
+  select(participant_private_id, spreadsheet_word, rt, age, gender, randomiser_ab12)
+```
+
+All three can go straight into dplyr or ggplot2.
+
+## Before sharing the data
+
+If you recruited through a platform such as Prolific, the [public IDs]{.hl} are the platform's IDs and can identify people. `blind_ids()` replaces them, the external session IDs and the completion codes with codes such as `P001`, consistently across all tables:
+
+```{r}
+blind_ids(g) |>
+  gorilla_participants() |>
+  select(participant_private_id, participant_public_id)
+```
+
+Gorilla's private IDs stay, because they mean nothing outside Gorilla. Free-text answers can still hold personal information such as email addresses, so check the questionnaires before you share them.
+
+## Save the tables as CSV files
+
+To continue the analysis in other software, or to share the data, `write_gorilla()` writes the tables to a folder of [CSV files]{.hl}:
+
+```{r}
+out <- file.path(tempdir(), "tidy")
+files <- write_gorilla(blind_ids(g), out)
+basename(files)
+```
+
+The folder has `participants.csv`, `trials.csv`, `questionnaires.csv` with one row per participant and `questionnaires_long.csv` with one row per answer. Missing values are empty cells and times are in UTC. With `by_task = TRUE`, each task gets its own trials file, which keeps only the spreadsheet columns of that task. Existing files are only replaced with `overwrite = TRUE`.

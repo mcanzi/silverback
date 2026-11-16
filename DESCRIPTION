@@ -1,0 +1,42 @@
+Package: silverback
+Type: Package
+Title: Tidy 'Gorilla' Experiment Builder Exports
+Version: 0.0.0.9000
+Authors@R:
+    person("Massimiliano", "Canzi", , "massimiliano.canzi@uni-konstanz.de", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0001-6124-0321"))
+Description: Reads the data files downloaded from the 'Gorilla' Experiment
+    Builder <https://gorilla.sc/> and turns them into tidy tibbles. Files from
+    Task Builder 1 and 2 and from Questionnaire Builder 1 and 2 can be read
+    together, whether they were downloaded as one file per node or as
+    combined files, and from several versions of an experiment. Task data
+    are reduced to one row per response with the same columns for both task
+    builders. Questionnaire answers are returned with one row per
+    participant, and participant information such as status, device,
+    randomiser outcomes and stored values is collected in one table.
+    A summary and a set of checks point out incomplete or repeated
+    participation and unusual response patterns before the analysis. The
+    tables can be saved as CSV files for use in other software.
+License: MIT + file LICENSE
+URL: https://github.com/mcanzi/silverback, https://mcanzi.de/silverback/
+BugReports: https://github.com/mcanzi/silverback/issues
+Encoding: UTF-8
+Language: en-GB
+Depends: R (>= 4.1.0)
+Imports:
+    dplyr (>= 1.1.0),
+    purrr (>= 1.0.0),
+    readr (>= 2.0.0),
+    stats,
+    stringr (>= 1.5.0),
+    tibble,
+    tidyr (>= 1.3.0),
+    utils
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
