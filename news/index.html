@@ -60,6 +60,10 @@
 <code><a href="../reference/gorilla_trials.html">gorilla_trials()</a></code> gives a message when a component, such as a Click Response without response values, recorded empty responses, and <code><a href="../reference/gorilla_checks.html">gorilla_checks()</a></code> then uses the clicked object for the <code>same_response</code> check. The <code>response</code> column itself is not changed.</li>
 <li>
 <code><a href="../reference/read_gorilla.html">read_gorilla()</a></code> reads Excel downloads (<code>.xlsx</code>) and gives the same tables as for CSV downloads. It warns when the same file is read in both formats.</li>
+<li>
+<code><a href="../reference/read_gorilla.html">read_gorilla()</a></code> reads CSV files saved in Windows-1252 (with a warning) or UTF-16, skips empty 0-byte files, and warns when the same events appear in more than one file, as after downloading or copying a file twice, or when a column name appears twice in a file. A file that is not text gives a plain error.</li>
+<li>Exports without the status, task name or timestamp columns no longer stop <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="../reference/gorilla_checks.html">gorilla_checks()</a></code> or <code><a href="../reference/write_gorilla.html">write_gorilla()</a></code>, and <code>write_gorilla(by_task = TRUE)</code> keeps trials without a task name in <code>trials_unknown_task.csv</code>. Writing data without any rows writes nothing.</li>
+<li>Arguments of the wrong type give clear errors in all functions.</li>
 </ul></div>
   </main></div>
 

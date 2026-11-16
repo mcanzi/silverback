@@ -57,7 +57,8 @@ The checks are
 - status:
 
   Participants whose status is not `complete`, such as live or rejected
-  participants included by hand.
+  participants included by hand. Skipped if the export has no status
+  column.
 
 - versions:
 
@@ -71,7 +72,8 @@ The checks are
 - missing_task:
 
   Participants who did not do a task that most participants with the
-  same randomiser and branch outcomes did.
+  same outcomes of randomiser, branch, order, counterbalance and
+  allocator nodes did.
 
 - unbalanced:
 

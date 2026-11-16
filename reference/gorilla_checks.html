@@ -96,7 +96,8 @@ smallest group of a randomiser node.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The checks are</p><dl><dt>status</dt>
 <dd><p>Participants whose status is not <code>complete</code>, such as live
-or rejected participants included by hand.</p></dd>
+or rejected participants included by hand. Skipped if the export has
+no status column.</p></dd>
 
 <dt>versions</dt>
 <dd><p>Data from more than one version of the experiment.</p></dd>
@@ -107,7 +108,8 @@ usually means that someone took part more than once.</p></dd>
 
 <dt>missing_task</dt>
 <dd><p>Participants who did not do a task that most
-participants with the same randomiser and branch outcomes did.</p></dd>
+participants with the same outcomes of randomiser, branch, order,
+counterbalance and allocator nodes did.</p></dd>
 
 <dt>unbalanced</dt>
 <dd><p>Randomiser nodes whose groups differ in size by more
