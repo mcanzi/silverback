@@ -1,6 +1,6 @@
 meta_cols <- c(
-  "Event Index", "UTC Timestamp", "UTC Date and Time", "Local Timestamp",
-  "Local Timezone", "Local Date and Time", "Experiment ID", "Experiment Version",
+  "Event Index", "UTC Timestamp", "UTC Date and Time", "UTC Date", "Local Timestamp",
+  "Local Timezone", "Local Date and Time", "Local Date", "Experiment ID", "Experiment Version",
   "Tree Node Key", "Repeat Key", "Schedule ID", "Participant Public ID",
   "Participant Private ID", "Participant Starting Group", "Participant Status",
   "Participant Completion Code", "Participant External Session ID",
@@ -34,10 +34,10 @@ node_col_pattern <- paste0("^(", paste(node_types, collapse = "|"), ")-")
 #' The `END OF FILE` row at the end of each file is removed, and files from
 #' nodes that no participant reached, which hold no data, are skipped. Files
 #' that were opened in a spreadsheet program and saved again with semicolons
-#' as separators are read too. If the files include both kinds of download,
-#' a warning says so, because the same rows would then be read twice. Lines
-#' with the wrong number of columns, as in a file that was cut off or edited
-#' by hand, also give a warning.
+#' or tabs as separators are read too. If the files include both kinds of
+#' download, a warning says so, because the same rows would then be read
+#' twice. Lines with the wrong number of columns, as in a file that was cut
+#' off or edited by hand, also give a warning.
 #'
 #' Column names are converted to snake case: `Participant Private ID`
 #' becomes `participant_private_id`, `Spreadsheet: Speaker` becomes
@@ -87,7 +87,9 @@ read_gorilla <- function(path, quiet = FALSE) {
   if (length(files) == 0L) {
     stop("No Gorilla files (data_exp_*.csv) found in `path`.", call. = FALSE)
   }
-  parsed <- files |> purrr::map(read_gorilla_file)
+  # lapply() rather than purrr::map(), which would wrap errors about a file in
+  # an "In index" message.
+  parsed <- lapply(files, read_gorilla_file)
   info <- parsed |> purrr::map("info") |> dplyr::bind_rows()
   combined <- stringr::str_detect(info$file, "_(tasks|questionnaires)\\.csv$")
   per_node <- stringr::str_detect(info$file, "_(task|questionnaire)-[a-z0-9]+\\.csv$")
@@ -123,29 +125,32 @@ read_gorilla <- function(path, quiet = FALSE) {
   out
 }
 
-find_gorilla_files <- function(path, tmp) {
+data_pattern <- "^data_exp_.*\\.csv$"
+
+find_gorilla_files <- function(path, tmp, pattern = data_pattern) {
   if (!is.character(path) || length(path) == 0L) {
     stop("`path` must be one or more paths to folders, CSV files or ZIP files.", call. = FALSE)
   }
+  # lapply() keeps errors such as "Path not found" plain; see read_gorilla().
   path |>
-    purrr::map(\(p) {
+    lapply(\(p) {
       if (dir.exists(p)) {
         listed <- list.files(p, recursive = TRUE, full.names = TRUE)
         listed <- listed[!stringr::str_detect(listed, "(^|/)__MACOSX/|(^|/)\\._")]
         name <- basename(listed)
         excel <- name |>
           stringr::str_detect(stringr::regex("^data_exp_.*\\.xlsx$", ignore_case = TRUE))
-        if (any(excel)) {
+        if (identical(pattern, data_pattern) && any(excel)) {
           warning("Skipped ", sum(excel), " Excel file", if (sum(excel) > 1L) "s",
                   ". Download the data from Gorilla as CSV to read them.", call. = FALSE)
         }
-        listed[stringr::str_detect(name, stringr::regex("^data_exp_.*\\.csv$", ignore_case = TRUE))]
+        listed[stringr::str_detect(name, stringr::regex(pattern, ignore_case = TRUE))]
       } else if (file.exists(p) &&
                  stringr::str_detect(p, stringr::regex("\\.zip$", ignore_case = TRUE))) {
         dest <- file.path(tmp, length(list.files(tmp)) + 1L)
         dir.create(dest, recursive = TRUE, showWarnings = FALSE)
         utils::unzip(p, exdir = dest)
-        find_gorilla_files(dest, tmp)
+        find_gorilla_files(dest, tmp, pattern)
       } else if (file.exists(p)) {
         p
       } else {
@@ -164,7 +169,18 @@ parse_file_name <- function(file) {
        node = if (is.na(m[1, 6])) NA_character_ else paste0(kind, "-", m[1, 6]))
 }
 
-read_csv_chr <- function(file, delim = ",") {
+# Gorilla writes commas. Files saved again from a spreadsheet program may use
+# semicolons or tabs instead. Column names rarely contain these characters,
+# so the one that occurs most often on the first line is the separator.
+detect_delim <- function(file) {
+  first <- readLines(file, n = 1L, warn = FALSE)
+  if (length(first) == 0L) return(",")
+  candidates <- c(",", ";", "\t")
+  counts <- stringr::str_count(first, stringr::fixed(candidates))
+  if (all(counts == 0L)) "," else candidates[which.max(counts)]
+}
+
+read_csv_chr <- function(file, delim = detect_delim(file)) {
   df <- withCallingHandlers(
     readr::read_delim(file, delim = delim,
                       col_types = readr::cols(.default = readr::col_character()),
@@ -173,9 +189,6 @@ read_csv_chr <- function(file, delim = ",") {
     vroom_parse_issue = function(w) invokeRestart("muffleWarning")
   )
   if (ncol(df) == 0L) return(df)
-  if (delim == "," && ncol(df) == 1L && stringr::str_detect(names(df), ";")) {
-    return(read_csv_chr(file, delim = ";"))
-  }
   eof <- stringr::str_trim(df[[1L]]) %in% "END OF FILE"
   bad <- readr::problems(df)$row |> unique() |> setdiff(which(eof) + 1L)
   if (length(bad)) {
@@ -197,7 +210,7 @@ detect_builder <- function(cols, kind) {
   if ("Question Key" %in% cols) return("questionnaire_builder_1")
   if (all(c("Key", "Response Type") %in% cols)) return("questionnaire_builder_2")
   if (identical(kind, "task")) return("task_unknown")
-  if (any(stringr::str_detect(cols, " object-[0-9]+ "))) return("questionnaire_builder_2_wide")
+  if (any(stringr::str_detect(cols, " object-[0-9]+\\s"))) return("questionnaire_builder_2_wide")
   "questionnaire_builder_1_wide"
 }
 

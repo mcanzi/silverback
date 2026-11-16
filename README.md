@@ -12,7 +12,7 @@ It reads
 - Questionnaire Builder 1 and Questionnaire Builder 2 data, in long and short format,
 - downloads with <span class="hl">one file per node</span> and <span class="hl">combined downloads</span>,
 - several versions of an experiment at once,
-- folders, single CSV files and ZIP archives as downloaded.
+- folders, single CSV files and ZIP archives as downloaded, also after they were saved again with semicolons or tabs.
 
 Files from nodes that no participant reached are skipped.
 

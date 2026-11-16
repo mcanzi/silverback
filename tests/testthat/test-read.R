@@ -99,6 +99,55 @@ test_that("files saved again with semicolons are read", {
   expect_equal(read_gorilla(dir)$tasks, read_gorilla(f)$tasks)
 })
 
+test_that("tab-separated files are read", {
+  f <- gorilla_example("data_exp_123456-v3_task-rh7p.csv")
+  d <- readr::read_csv(f, col_types = readr::cols(.default = "c"), na = "")
+  dir <- tempfile()
+  dir.create(dir)
+  readr::write_tsv(d, file.path(dir, basename(f)), na = "")
+  expect_equal(read_gorilla(dir)$tasks, read_gorilla(f)$tasks)
+})
+
+test_that("tab-separated files with a question text in the header are read", {
+  dir <- tempfile()
+  dir.create(dir)
+  rows <- rbind(meta("601", "Consent", "questionnaire-t1", 1),
+                meta("602", "Consent", "questionnaire-t1", 1))
+  option <- "Consent object-7 I agree,\nand I have read the text"
+  quote <- function(v) paste0('"', v, '"')
+  lines <- c(paste(quote(c(names(rows), option, paste(option, "Quantised"))), collapse = "\t"),
+             paste(quote(c(unlist(rows[1, ]), "1", "1")), collapse = "\t"),
+             paste(quote(c(unlist(rows[2, ]), "0", "0")), collapse = "\t"))
+  writeLines(lines, file.path(dir, "data_exp_55555-v1_questionnaire-t1.csv"))
+  expect_no_warning(g <- read_gorilla(dir))
+  expect_equal(nrow(g$participants), 2L)
+  q <- g$questionnaires
+  expect_equal(unique(q$item), "Consent-I agree, and I have read the text")
+  expect_equal(q$response, c("1", "0"))
+  expect_equal(q$quantised, c(1, 0))
+})
+
+test_that("older exports with UTC Date and Local Date are not spreadsheet columns", {
+  f <- gorilla_example("data_exp_123456-v3_task-rh7p.csv")
+  d <- readr::read_csv(f, col_types = readr::cols(.default = "c"), na = "")
+  names(d)[names(d) == "UTC Date and Time"] <- "UTC Date"
+  names(d)[names(d) == "Local Date and Time"] <- "Local Date"
+  dir <- tempfile()
+  dir.create(dir)
+  readr::write_csv(d, file.path(dir, basename(f)), na = "")
+  g <- read_gorilla(dir)
+  expect_true(all(c("utc_date", "local_date") %in% names(g$tasks)))
+  trial_cols <- names(gorilla_trials(g))
+  expect_false(any(c("spreadsheet_utc_date", "spreadsheet_local_date") %in% trial_cols))
+})
+
+test_that("a file that is not a Gorilla export gives a plain error", {
+  dir <- tempfile()
+  dir.create(dir)
+  writeLines(c("a,b", "1,2"), file.path(dir, "data_exp_1-v1_task-x1.csv"))
+  expect_error(read_gorilla(dir), "^data_exp_1-v1_task-x1.csv does not look like a Gorilla export")
+})
+
 test_that("answers with line breaks and quotes survive", {
   dir <- tempfile()
   dir.create(dir)

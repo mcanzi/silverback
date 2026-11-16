@@ -45,10 +45,10 @@ can be mixed, and so can files from several versions of the experiment.
 The \verb{END OF FILE} row at the end of each file is removed, and files from
 nodes that no participant reached, which hold no data, are skipped. Files
 that were opened in a spreadsheet program and saved again with semicolons
-as separators are read too. If the files include both kinds of download,
-a warning says so, because the same rows would then be read twice. Lines
-with the wrong number of columns, as in a file that was cut off or edited
-by hand, also give a warning.
+or tabs as separators are read too. If the files include both kinds of
+download, a warning says so, because the same rows would then be read
+twice. Lines with the wrong number of columns, as in a file that was cut
+off or edited by hand, also give a warning.
 
 Column names are converted to snake case: \verb{Participant Private ID}
 becomes \code{participant_private_id}, \code{Spreadsheet: Speaker} becomes

@@ -18,3 +18,10 @@
 * `read_gorilla()` no longer warns about parsing issues when the `END OF FILE`
   row has no trailing commas, as in recent exports. Other rows with the wrong
   number of columns give one warning that names the file.
+* `read_gorilla()` reads files saved with tabs as separators, also when a
+  question text in the header contains commas or line breaks, and no longer
+  treats the `UTC Date` and `Local Date` columns of older exports as
+  spreadsheet columns.
+* Objects of Questionnaire Builder 2 that share a name within a
+  questionnaire, such as several objects left as `Rating Scale`, are now
+  kept apart by their object ID instead of being treated as repeated answers.

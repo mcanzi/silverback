@@ -21,6 +21,7 @@ utils::globalVariables(c(
   "n",
   "name",
   "object",
+  "object_id",
   "occ",
   "participant_device_type",
   "participant_private_id",

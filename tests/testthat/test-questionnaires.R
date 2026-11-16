@@ -32,9 +32,13 @@ test_that("short format questionnaires from both builders are read", {
   expect_equal(q$response[q$item == "pets-Dog" & q$participant_private_id == "101"], "1")
   expect_equal(q$quantised[q$item == "grid-Reading" & q$participant_private_id == "101"], 4)
   expect_false("END QUESTIONNAIRE" %in% q$item)
-  expect_message(w <- gorilla_wide(g), "more than once")
-  expect_true(all(c("age", "age__2", "mood_quantised", "consent_1", "consent_1_quantised") %in% names(w)))
-  expect_equal(w$age__2[w$participant_private_id == "101"], 6L)
+  expect_setequal(q$item[q$participant_private_id == "101" & startsWith(q$item, "age")],
+                  c("age object-3", "age object-9"))
+  expect_no_message(w <- gorilla_wide(g))
+  expect_true(all(c("age_object_3", "age_object_9", "mood_quantised", "consent_1",
+                    "consent_1_quantised") %in% names(w)))
+  expect_false(any(grepl("__", names(w))))
+  expect_equal(w$age_object_9[w$participant_private_id == "101"], 6L)
 })
 
 test_that("combined files mixing both questionnaire builders are read", {
@@ -52,4 +56,43 @@ test_that("combined files mixing both questionnaire builders are read", {
   ch <- gorilla_checks(g)
   expect_true(all(c("versions", "device") %in% ch$check))
   expect_equal(ch$participant_private_id[ch$check == "device"], "202")
+})
+
+test_that("objects sharing a default name stay separate questions", {
+  dir <- tempfile()
+  dir.create(dir)
+  rows <- rbind(meta("401", "Attitudes", "questionnaire-a1", 4),
+                meta("402", "Attitudes", "questionnaire-a1", 4))
+  rows$`Response Type` <- "response"
+  rows$`Object Name` <- "Rating Scale"
+  rows$Key <- rep(c("value", "quantised"), 4)
+  # participant 402 saw the two scales in the opposite order
+  rows$`Object ID` <- c("object-5", "object-5", "object-9", "object-9",
+                        "object-9", "object-9", "object-5", "object-5")
+  rows$Response <- c("2", "2", "7", "7", "6", "6", "1", "1")
+  write_export(dir, "data_exp_55555-v1_questionnaire-a1.csv", rows)
+  g <- read_gorilla(dir)
+  expect_setequal(unique(g$questionnaires$item),
+                  c("Rating Scale object-5", "Rating Scale object-9"))
+  expect_no_message(w <- gorilla_wide(g))
+  w <- w[order(w$participant_private_id), ]
+  expect_equal(w$rating_scale_object_5, c(2L, 1L))
+  expect_equal(w$rating_scale_object_9, c(7L, 6L))
+  expect_equal(w$rating_scale_object_9_quantised, c(7, 6))
+})
+
+test_that("an object answered twice still goes into a __2 column", {
+  dir <- tempfile()
+  dir.create(dir)
+  rows <- meta("501", "Survey", "questionnaire-r1", 4)
+  rows$`Response Type` <- "response"
+  rows$`Object Name` <- "mood"
+  rows$`Object ID` <- "object-3"
+  rows$Key <- rep(c("value", "quantised"), 2)
+  rows$Response <- c("Good", "1", "Bad", "3")
+  write_export(dir, "data_exp_55555-v1_questionnaire-r1.csv", rows)
+  expect_message(w <- gorilla_wide(read_gorilla(dir)), "more than once")
+  expect_equal(w$mood, "Good")
+  expect_equal(w$mood__2, "Bad")
+  expect_equal(w$mood__2_quantised, 3)
 })

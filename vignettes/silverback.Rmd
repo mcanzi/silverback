@@ -118,7 +118,9 @@ answers
 
 Dropdowns, multiple choice questions and Likert scales also have a [quantised value]{.hl}, the position of the chosen option, which goes into a second column ending in `_quantised`. Checkboxes give one column per option, such as `languages_german`. Questionnaires from both builders and in both download formats end up with the same column names.
 
-Sometimes a participant answers an item twice. This happens after a repeated node, or when two questions in the same questionnaire share an object name. The first answer stays in the item's column and later answers go into columns ending in `__2`, `__3` and so on.
+Questions are named after their object in the Questionnaire Builder. If several objects in one questionnaire share a name, for example because they kept Gorilla's default name `Rating Scale`, they are still different questions, and each gets its object ID added: `rating_scale_object_29`, `rating_scale_object_33` and so on.
+
+Sometimes a participant answers an item twice. This happens after a repeated node, or when someone goes back a page and submits it again. The first answer stays in the item's column and later answers go into columns ending in `__2`, `__3` and so on.
 
 ## Get one row per participant for everything else
 

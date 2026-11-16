@@ -22,10 +22,24 @@ item_from_key <- function(object, key) {
   )
 }
 
+# Objects keep their name as item name. Several objects with the same name in
+# one questionnaire, such as Gorilla's default names "Rating Scale" or
+# "Multiple Choice", are different questions, so they get the object ID too.
+distinct_objects <- function(object, id, group = rep("", length(object))) {
+  shared <- tibble::tibble(object, id, group) |>
+    dplyr::filter(!is.na(object), !is.na(id)) |>
+    dplyr::distinct() |>
+    dplyr::count(group, object) |>
+    dplyr::filter(n > 1L)
+  clash <- paste(group, object) %in% paste(shared$group, shared$object) & !is.na(id)
+  dplyr::if_else(clash, paste(object, id), object)
+}
+
 wide_columns <- function(cols) {
-  m <- stringr::str_match(cols, "^(.*) object-[0-9]+ (.*)$")
-  object <- stringr::str_trim(m[, 2])
-  suffix <- stringr::str_trim(m[, 3])
+  # Option texts in the header can contain line breaks.
+  m <- stringr::str_match(cols, stringr::regex("^(.*) (object-[0-9]+)\\s(.*)$", dotall = TRUE))
+  object <- distinct_objects(stringr::str_squish(m[, 2]), m[, 3])
+  suffix <- stringr::str_squish(m[, 4])
   key <- dplyr::case_when(
     suffix %in% c("Response", "Value") ~ "value",
     suffix == "Quantised" ~ "quantised",
@@ -58,9 +72,11 @@ questionnaire_long <- function(raw, builder) {
       dplyr::mutate(type = col_of(raw, "Response Type"),
                     question_key = col_of(raw, "Question Key"),
                     object = as.character(col_of(raw, "Object Name")),
+                    object_id = as.character(col_of(raw, "Object ID")),
                     key = raw[["Key"]],
                     value = raw[["Response"]]) |>
       dplyr::filter(type %in% "response", is.na(question_key)) |>
+      dplyr::mutate(object = distinct_objects(object, object_id, task_name)) |>
       dplyr::mutate(item = item_from_key(object, key), is_quantised = is_quantised_key(key)) |>
       dplyr::select(dplyr::all_of(q_keys), item, is_quantised, value)
   }
@@ -104,9 +120,13 @@ merge_quantised <- function(long) {
 #'
 #' Questionnaires from Questionnaire Builder 1 and 2, downloaded in long or
 #' short format, give the same columns. An item that appears in more than
-#' one questionnaire gets the questionnaire name as a prefix. If a
+#' one questionnaire gets the questionnaire name as a prefix. Objects of
+#' Questionnaire Builder 2 that share a name within a questionnaire, such as
+#' several objects left with the default name `Rating Scale`, are different
+#' questions and get their object ID as a suffix, as in
+#' `rating_scale_object_29`. If a
 #' participant answered the same item more than once, for example after
-#' repeating a node or because two questions share a name, the later answers
+#' repeating a node or going back to a page, the later answers
 #' go into columns ending in `__2`, `__3` and so on. Cleaned item names never
 #' contain a double underscore, so these columns cannot be confused with
 #' items whose names end in a number.
