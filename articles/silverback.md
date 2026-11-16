@@ -410,3 +410,19 @@ per answer. Missing values are empty cells and times are in UTC. With
 `by_task = TRUE`, each task gets its own trials file, which keeps only
 the spreadsheet columns of that task. Existing files are only replaced
 with `overwrite = TRUE`.
+
+## If something looks wrong
+
+silverback has been tested on real exports from many different
+experiments, but Gorilla changes its exports from time to time, and a
+new format or an unusual experiment may give results that are not what
+you expect. Before you analyse or publish the data, compare the tables
+with your raw files, for example the number of participants and of
+responses in each task, and look at the output of
+[`summary()`](https://rdrr.io/r/base/summary.html) and
+[`gorilla_checks()`](https://mcanzi.de/silverback/reference/gorilla_checks.md).
+
+If a file is read wrongly or not at all, please [open an
+issue](https://github.com/mcanzi/silverback/issues), if possible with a
+small example file. Remove personal data such as Prolific IDs or email
+addresses before you share it.

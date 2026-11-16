@@ -137,7 +137,31 @@ saves the tidy tables as CSV files, for analysis in other software:
 write_gorilla(blind_ids(g), "tidy")
 ```
 
+## Check your data
+
+silverback has been tested on real exports from many different
+experiments, made with both task builders and both questionnaire
+builders and downloaded per node or combined, as CSV or Excel files.
+Gorilla changes its exports from time to time, however, and a new format
+or an unusual experiment may give results that are not what you expect.
+Before you analyse or publish data read with silverback, compare the
+tables with your raw files, for example the number of participants and
+of responses in each task.
+[`summary()`](https://rdrr.io/r/base/summary.html) and
+[`gorilla_checks()`](https://mcanzi.de/silverback/reference/gorilla_checks.md)
+help with this.
+
+If a file is read wrongly or not at all, please [open an
+issue](https://github.com/mcanzi/silverback/issues). A small example
+file helps a lot, but remove personal data such as Prolific IDs or email
+addresses before you share it.
+
 ## Disclaimer
+
+silverback is free software under the [MIT
+licence](https://opensource.org/license/mit). It comes without warranty
+of any kind, and its authors are not liable for any claim or damage
+arising from its use; see the licence for the full terms.
 
 Gorilla is made by Cauldron Science. silverback is not affiliated with
 or endorsed by Cauldron Science. It reads the files that Gorilla exports

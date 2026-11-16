@@ -129,8 +129,15 @@
 <code class="sourceCode R"><span><span class="fu"><a href="reference/write_gorilla.html">write_gorilla</a></span><span class="op">(</span><span class="fu"><a href="reference/blind_ids.html">blind_ids</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span>, <span class="st">"tidy"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="check-your-data">Check your data<a class="anchor" aria-label="anchor" href="#check-your-data"></a>
+</h2>
+<p>silverback has been tested on real exports from many different experiments, made with both task builders and both questionnaire builders and downloaded per node or combined, as CSV or Excel files. Gorilla changes its exports from time to time, however, and a new format or an unusual experiment may give results that are not what you expect. Before you analyse or publish data read with silverback, compare the tables with your raw files, for example the number of participants and of responses in each task. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="reference/gorilla_checks.html">gorilla_checks()</a></code> help with this.</p>
+<p>If a file is read wrongly or not at all, please <a href="https://github.com/mcanzi/silverback/issues" class="external-link">open an issue</a>. A small example file helps a lot, but remove personal data such as Prolific IDs or email addresses before you share it.</p>
+</div>
+<div class="section level2">
 <h2 id="disclaimer">Disclaimer<a class="anchor" aria-label="anchor" href="#disclaimer"></a>
 </h2>
+<p>silverback is free software under the <a href="https://opensource.org/license/mit" class="external-link">MIT licence</a>. It comes without warranty of any kind, and its authors are not liable for any claim or damage arising from its use; see the licence for the full terms.</p>
 <p>Gorilla is made by Cauldron Science. silverback is not affiliated with or endorsed by Cauldron Science. It reads the files that Gorilla exports and does not connect to Gorilla.</p>
 </div>
 </div>
