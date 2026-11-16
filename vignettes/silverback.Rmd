@@ -12,7 +12,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(tibble.print_max = 6, tibble.print_min = 6)
 ```
 
-silverback turns the files you download from the Gorilla Experiment Builder into three tidy tibbles: one for task responses, one for questionnaire answers and one for participants. A typical session looks like this:
+silverback turns the files you download from the Gorilla Experiment Builder into three tidy tibbles: one for task responses, one for questionnaire answers and one for participants. Eye tracking and mouse tracking recordings can be read too. A typical session looks like this:
 
 ```{r, eval = FALSE}
 library(silverback)
@@ -145,6 +145,21 @@ ld |>
 ```
 
 All three can go straight into dplyr or ggplot2.
+
+## Eye tracking and mouse tracking
+
+The Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2 do not put their recordings in the main export. Gorilla saves one file per trial instead, named like `123456-3-9100037-task-ab12-50000037-collection-10-2.csv`. `read_eyetracking()` and `read_mousetracking()` read them from the same folder or ZIP file:
+
+```{r, eval = FALSE}
+eye <- read_eyetracking("data", x = g)
+eye$gaze         # one row per gaze sample
+eye$zones        # the zones of each screen
+eye$calibration  # one row per calibration point and attempt
+mouse <- read_mousetracking("data", x = g)
+mouse$mouse      # one row per mouse sample
+```
+
+Positions are on a scale from 0 to 1 across the task area, with the origin at the bottom left. Each sample is assigned to the zone it falls in, and where zones overlap the smallest one wins; `zones = "Picture"` limits the assignment to zones with that name. The recordings do not say which task they belong to, so pass the main export as `x` to add `task_name` and the screen name. The samples can then be joined to `gorilla_trials()` by `participant_private_id`, `tree_node_key`, `display`, `trial` and `screen`.
 
 ## Before sharing the data
 

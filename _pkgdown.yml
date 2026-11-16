@@ -34,6 +34,10 @@ reference:
   contents:
   - read_gorilla
   - gorilla_example
+- title: Eye and mouse tracking
+  contents:
+  - read_eyetracking
+  - read_mousetracking
 - title: Tidy tables
   contents:
   - gorilla_trials

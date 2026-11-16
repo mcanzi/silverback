@@ -12,7 +12,8 @@ It reads
 - Questionnaire Builder 1 and Questionnaire Builder 2 data, in long and short format,
 - downloads with <span class="hl">one file per node</span> and <span class="hl">combined downloads</span>,
 - several versions of an experiment at once,
-- folders, single CSV files and ZIP archives as downloaded, also after they were saved again with semicolons or tabs.
+- folders, single CSV files and ZIP archives as downloaded, also after they were saved again with semicolons or tabs,
+- recordings of the Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2.
 
 Files from nodes that no participant reached are skipped.
 
@@ -75,6 +76,15 @@ To read your own data, give `read_gorilla()` the folder or ZIP file you download
 
 ```r
 g <- read_gorilla("data_exp_123456-v3.zip")
+```
+
+Recordings of the Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2 are saved in separate files, one per trial. `read_eyetracking()` and `read_mousetracking()` read them, assign each sample to the <span class="hl">zone</span> of the screen it falls in, and take the task and screen names from the main export:
+
+```r
+eye <- read_eyetracking("data", x = g)
+eye$gaze         # one row per gaze sample
+eye$calibration  # accuracy of each calibration point
+mouse <- read_mousetracking("data", x = g)
 ```
 
 If the <span class="hl">public IDs</span> come from a recruitment platform such as Prolific, `blind_ids()` replaces them with codes before you share the data.

@@ -78,3 +78,83 @@ combined_questionnaires <- function(dir) {
   qb1$`Object Name` <- ""
   write_export(dir, "data_exp_55555-vall_questionnaires.csv", rbind(qb1, qb2))
 }
+
+upload_keys <- function(n, id = "701", node = "task-et1", display = "Trial", trial = "1",
+                        screen = "", screen_id = "scr1", index = "2") {
+  data.frame(
+    `Experiment ID` = "55555", `Experiment Version` = "1", `Tree Node Key` = node,
+    `Schedule ID` = "900", `Participant Private ID` = id, Spreadsheet = "List1",
+    `Spreadsheet Index` = index, Display = display, `Trial Number` = trial, `Screen ` = screen,
+    `Screen ID` = screen_id, `Screen Index` = "2", `Screen Counter` = "2",
+    check.names = FALSE, stringsAsFactors = FALSE
+  )[rep(1L, n), ]
+}
+
+# A gaze recording with a large picture zone and a small button zone on top
+# of it, and samples inside the button, inside the picture only, and outside.
+gaze_file <- function(dir, id = "701") {
+  zones <- cbind(upload_keys(2, id), Filename = "collection", Timestamp = "1767225600000",
+                 Elapsed = "0", Type = "zone",
+                 `Predicted Gaze X` = "", `Predicted Gaze Y` = "",
+                 `Predicted Gaze X Normalised` = "", `Predicted Gaze Y Normalised` = "",
+                 `Zone Name` = c("Picture", "Button"), `Zone UID` = c("object-1", "object-2"),
+                 `Zone X` = "0", `Zone Y` = "0", `Zone W` = "0", `Zone H` = "0",
+                 `Zone X Normalised` = c("0", "0.1"), `Zone Y Normalised` = c("1", "0.9"),
+                 `Zone W Normalised` = c("0.5", "0.1"), `Zone H Normalised` = c("0.5", "0.1"))
+  samples <- cbind(upload_keys(3, id), Filename = "collection",
+                   Timestamp = as.character(1767225600000 + c(0, 40, 80)),
+                   Elapsed = c("0", "40", "80"), Type = "prediction",
+                   `Predicted Gaze X` = c("100", "300", "900"), `Predicted Gaze Y` = "1",
+                   `Predicted Gaze X Normalised` = c("0.15", "0.3", "0.9"),
+                   `Predicted Gaze Y Normalised` = c("0.85", "0.7", "0.2"),
+                   `Zone Name` = "", `Zone UID` = "", `Zone X` = "", `Zone Y` = "",
+                   `Zone W` = "", `Zone H` = "", `Zone X Normalised` = "",
+                   `Zone Y Normalised` = "", `Zone W Normalised` = "", `Zone H Normalised` = "")
+  path <- file.path(dir, paste0("55555-1-", id, "-task-et1-900-collection-1-2.csv"))
+  readr::write_csv(rbind(zones, samples), path, na = "")
+  path
+}
+
+# A calibration that fails once after measuring two points, then fails for
+# good before measuring any.
+calibration_file <- function(dir, id = "701") {
+  type <- c("calibration", "accuracy", "accuracy", "calibration failed - retrying",
+            "calibration", "calibration failed - max failures", "end of calibration")
+  n <- length(type)
+  num <- function(v) rep(v, length.out = n)
+  d <- cbind(upload_keys(n, id, display = "Calibration 1", screen_id = "cal1", index = "1"),
+             Filename = "calibration", Timestamp = as.character(1767225600000 + seq_len(n)),
+             Elapsed = "0", Interval = "0", Type = type, Failures = "",
+             `Predicted Gaze X` = "0", `Predicted Gaze Y` = "0",
+             `Predicted Gaze X Normalised` = "0", `Predicted Gaze Y Normalised` = "0",
+             `Face Detection Confidence` = "1", `X of Point` = "0", `Y of Point` = "0",
+             `X of Point Normalised` = num(c("0", "0.5", "0.2", "0")),
+             `Y of Point Normalised` = num(c("0", "0.5", "0.8", "0")),
+             `X of Centroid` = "0", `Y of Centroid` = "0",
+             `X of Centroid Normalised` = num(c("0", "0.53", "0.2", "0")),
+             `Y of Centroid Normalised` = num(c("0", "0.54", "0.8", "0")),
+             `SD of X Centroid` = "0", `SD of Y Centroid` = "0",
+             `SD of X Centroid Normalised` = "0.01", `SD of Y Centroid Normalised` = "0.02")
+  path <- file.path(dir, paste0("55555-1-", id, "-task-et1-900-calibration-1-2.csv"))
+  readr::write_csv(d, path, na = "")
+  path
+}
+
+mouse_file <- function(dir, id = "701") {
+  keys <- function(n) {
+    k <- upload_keys(n, id, screen = "Choice")
+    names(k)[names(k) == "Trial Number"] <- "Trial Count"
+    k
+  }
+  zones <- cbind(keys(1), Timestamp = "1000", Elapsed = "0", Type = "zone", Name = "Target",
+                 `Unique ID` = "object-5", `X Normalised` = "0.5", `Y Normalised` = "0.5",
+                 `W Normalised` = "0.5", `H Normalised` = "0.5", `X Raw` = "0", `Y Raw` = "0")
+  moves <- cbind(keys(2), Timestamp = c("1010.5", "1027"), Elapsed = c("10.5", "27"),
+                 Type = "mouse", Name = "", `Unique ID` = "",
+                 `X Normalised` = c("0.2", "0.7"), `Y Normalised` = c("0.8", "0.3"),
+                 `W Normalised` = "0", `H Normalised` = "0", `X Raw` = c("200", "700"),
+                 `Y Raw` = c("200", "700"))
+  path <- file.path(dir, paste0("55555-1-", id, "-task-et1-900-mousetracking-1-2.csv"))
+  readr::write_csv(rbind(zones, moves), path, na = "")
+  path
+}

@@ -25,3 +25,7 @@
 * Objects of Questionnaire Builder 2 that share a name within a
   questionnaire, such as several objects left as `Rating Scale`, are now
   kept apart by their object ID instead of being treated as repeated answers.
+* `read_eyetracking()` and `read_mousetracking()` read the recordings of the
+  Eye Tracking (Webgazer) and Mouse Tracking components of Task Builder 2:
+  gaze and mouse samples assigned to screen zones, the zones themselves, and
+  the accuracy and outcome of each calibration attempt.
