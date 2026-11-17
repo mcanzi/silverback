@@ -1,7 +1,9 @@
 # Changelog
 
-## silverback 0.0.0.9000
+## silverback 0.1.0
 
+- silverback can be installed from R-universe
+  (<https://mcanzi.r-universe.dev>).
 - [`read_gorilla()`](https://mcanzi.de/silverback/reference/read_gorilla.md)
   reads exports from Task Builder 1 and 2 and Questionnaire Builder 1
   and 2, in long and short format, downloaded as one file per node or as

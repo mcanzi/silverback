@@ -11,12 +11,12 @@ Source:
 [`inst/CITATION`](https://github.com/mcanzi/silverback/blob/main/inst/CITATION)
 
 Canzi M (2026). *silverback: Tidy 'Gorilla' Experiment Builder Exports*.
-R package version 0.0.0.9000, <https://github.com/mcanzi/silverback>.
+R package version 0.1.0, <https://github.com/mcanzi/silverback>.
 
     @Manual{,
       title = {silverback: Tidy 'Gorilla' Experiment Builder Exports},
       author = {Massimiliano Canzi},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.1.0},
       url = {https://github.com/mcanzi/silverback},
     }
