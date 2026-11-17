@@ -20,11 +20,10 @@ Files from nodes that no participant reached are skipped.
 
 ## Installation
 
-silverback is not on CRAN yet. Install it from GitHub:
+silverback is not on CRAN yet. Install it from R-universe:
 
 ```r
-# install.packages("pak")
-pak::pak("mcanzi/silverback")
+install.packages("silverback", repos = c("https://mcanzi.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
 ## Example
