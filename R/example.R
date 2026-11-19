@@ -5,8 +5,11 @@
 #' 2, a rhyme judgement task made with Task Builder 1, a consent form made
 #' with Questionnaire Builder 1 and a background questionnaire made with
 #' Questionnaire Builder 2. One participant stopped during the lexical
-#' decision task, and one node was never reached, so its file is empty. The
-#' data were simulated and the identifiers are made up.
+#' decision task, and one node was never reached, so its file is empty. For
+#' the first participant, the lexical decision task also has the recordings
+#' of the Eye Tracking and Mouse Tracking components: a calibration, gaze on
+#' the first three trials and the mouse moving to the continue button of the
+#' instructions. The data were simulated and the identifiers are made up.
 #'
 #' @param file Name of one file. If `NULL`, the path to the folder.
 #'

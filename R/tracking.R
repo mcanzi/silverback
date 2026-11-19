@@ -58,12 +58,12 @@
 #' @seealso [read_mousetracking()] for the Mouse Tracking component.
 #'
 #' @examples
-#' \dontrun{
-#' g <- read_gorilla("data")
-#' eye <- read_eyetracking("data", x = g)
+#' g <- read_gorilla(gorilla_example(), quiet = TRUE)
+#' eye <- read_eyetracking(gorilla_example(), x = g)
+#' eye
 #' eye$gaze
 #' eye$calibration
-#' }
+#' table(eye$gaze$trial, eye$gaze$zone_name, useNA = "ifany")
 #' @export
 read_eyetracking <- function(path, x = NULL, zones = NULL, quiet = FALSE) {
   if (!is.null(x)) check_gorilla(x)
@@ -140,11 +140,10 @@ read_eyetracking <- function(path, x = NULL, zones = NULL, quiet = FALSE) {
 #' @seealso [read_eyetracking()] for the Eye Tracking component.
 #'
 #' @examples
-#' \dontrun{
-#' g <- read_gorilla("data")
-#' mouse <- read_mousetracking("data", x = g)
+#' g <- read_gorilla(gorilla_example(), quiet = TRUE)
+#' mouse <- read_mousetracking(gorilla_example(), x = g)
+#' mouse
 #' mouse$mouse
-#' }
 #' @export
 read_mousetracking <- function(path, x = NULL, zones = NULL, quiet = FALSE) {
   if (!is.null(x)) check_gorilla(x)

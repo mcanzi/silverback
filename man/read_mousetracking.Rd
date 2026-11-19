@@ -56,11 +56,10 @@ as \code{x} to add \code{task_name}, so that the samples can be joined to
 \code{trial} and \code{screen}.
 }
 \examples{
-\dontrun{
-g <- read_gorilla("data")
-mouse <- read_mousetracking("data", x = g)
+g <- read_gorilla(gorilla_example(), quiet = TRUE)
+mouse <- read_mousetracking(gorilla_example(), x = g)
+mouse
 mouse$mouse
-}
 }
 \seealso{
 \code{\link[=read_eyetracking]{read_eyetracking()}} for the Eye Tracking component.

@@ -90,7 +90,10 @@ test_that("recordings are found in ZIP archives and missing ones give an error",
   expect_equal(nrow(eye$gaze), 3L)
   expect_setequal(eye$files$kind, c("calibration", "collection"))
   expect_error(read_mousetracking(dir), "No mousetracking files")
-  expect_error(read_eyetracking(gorilla_example()), "No collection or calibration files")
+  other <- tempfile()
+  dir.create(other)
+  write_export(other, "data_exp_55555-v1_task-x1.csv", meta("1", "Task", "task-x1", 1))
+  expect_error(read_eyetracking(other), "No collection or calibration files")
 })
 
 test_that("rows of other types are kept and broken files give a warning", {
@@ -124,4 +127,15 @@ test_that("rows keep the right file when a value contains a line break", {
   expect_equal(g$participant_private_id, rep(c("701", "702"), each = 3))
   expect_equal(unique(g$display), c("Trial\nblock 1", "Trial"))
   expect_true(all(stringr::str_detect(g$file, paste0("-", g$participant_private_id, "-task-"))))
+})
+
+test_that("the example has eye and mouse tracking recordings", {
+  g <- read_gorilla(gorilla_example(), quiet = TRUE)
+  eye <- read_eyetracking(gorilla_example(), x = g)
+  expect_equal(nrow(eye$gaze), 48L)
+  expect_equal(unique(eye$gaze$task_name), "Lexical decision")
+  expect_equal(eye$calibration$outcome, rep("succeeded", 5))
+  mouse <- read_mousetracking(gorilla_example(), x = g)
+  expect_equal(nrow(mouse$mouse), 40L)
+  expect_equal(mouse$mouse$zone_name[40], "Continue Button")
 })

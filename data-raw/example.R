@@ -210,3 +210,95 @@ write_export(bg, "data_exp_123456-v3_questionnaire-bg9q.csv")
 
 empty <- bg[0, ]
 write_export(empty, "data_exp_123456-v3_questionnaire-zz1e.csv")
+
+p <- people[1, ]
+node <- "task-ld2k"
+schedule <- as.character(50000000L + as.integer(p$private) %% 100000L)
+recording <- function(kind, trial, screen_index) {
+  file.path(out_dir, paste0("123456-3-", p$private, "-", node, "-", schedule, "-", kind, "-",
+                            trial, "-", screen_index, ".csv"))
+}
+upload_keys <- function(n, display, trial, screen, screen_id, index, trial_col = "Trial Number") {
+  k <- data.frame(`Experiment ID` = "123456", `Experiment Version` = "3", `Tree Node Key` = node,
+                  `Schedule ID` = schedule, `Participant Private ID` = p$private,
+                  Spreadsheet = paste0("Spreadsheet ", substr(p$group, 6, 6)),
+                  `Spreadsheet Index` = index, Display = display, `Trial Number` = trial,
+                  `Screen ` = screen, `Screen ID` = screen_id, `Screen Index` = "1",
+                  `Screen Counter` = "1", check.names = FALSE, stringsAsFactors = FALSE)[rep(1L, n), ]
+  names(k)[names(k) == "Trial Number"] <- trial_col
+  k
+}
+write_recording <- function(df, file) {
+  utils::write.csv(df, file, row.names = FALSE, fileEncoding = "UTF-8")
+}
+fmt <- function(v) sprintf("%.4f", v)
+
+points <- data.frame(x = c(0.5, 0.1, 0.9, 0.1, 0.9), y = c(0.5, 0.9, 0.9, 0.1, 0.1))
+centroid_x <- points$x + stats::rnorm(nrow(points), 0, 0.03)
+centroid_y <- points$y + stats::rnorm(nrow(points), 0, 0.03)
+type <- c("calibration", rep("accuracy", nrow(points)), "calibration succeeded", "end of calibration")
+pad <- function(v) c("", v, "", "")
+cal_start <- p$start + 100000
+calibration <- cbind(
+  upload_keys(length(type), "Calibration", "1", "", "cal1", "1"),
+  Filename = "calibration", Timestamp = sprintf("%.0f", cal_start + (seq_along(type) - 1) * 1500),
+  Elapsed = as.character((seq_along(type) - 1) * 1500), Interval = "1500", Type = type,
+  Failures = "0", `Predicted Gaze X` = "", `Predicted Gaze Y` = "",
+  `Predicted Gaze X Normalised` = "", `Predicted Gaze Y Normalised` = "",
+  `Face Detection Confidence` = pad(fmt(stats::runif(nrow(points), 0.85, 0.99))),
+  `X of Point` = pad(round(points$x * 1903)), `Y of Point` = pad(round((1 - points$y) * 969)),
+  `X of Point Normalised` = pad(fmt(points$x)), `Y of Point Normalised` = pad(fmt(points$y)),
+  `X of Centroid` = pad(round(centroid_x * 1903)), `Y of Centroid` = pad(round((1 - centroid_y) * 969)),
+  `X of Centroid Normalised` = pad(fmt(centroid_x)), `Y of Centroid Normalised` = pad(fmt(centroid_y)),
+  `SD of X Centroid` = pad(round(stats::runif(nrow(points), 0.03, 0.06) * 1903)),
+  `SD of Y Centroid` = pad(round(stats::runif(nrow(points), 0.03, 0.06) * 969)),
+  `SD of X Centroid Normalised` = pad(fmt(stats::runif(nrow(points), 0.03, 0.06))),
+  `SD of Y Centroid Normalised` = pad(fmt(stats::runif(nrow(points), 0.03, 0.06)))
+)
+write_recording(calibration, recording("calibration", 1, 1))
+
+gaze_trial <- function(k) {
+  n <- 16L
+  elapsed <- (seq_len(n) - 1L) * 40
+  gx <- 0.5 + stats::rnorm(n, 0, 0.06)
+  gy <- 0.5 + stats::rnorm(n, 0, 0.06)
+  t0 <- p$start + 120000 + k * 1500
+  zone <- cbind(upload_keys(1, "Trial", as.character(k), "", "tgt1", as.character(k + 2L)),
+                Filename = "collection", Timestamp = sprintf("%.0f", t0), Elapsed = "0",
+                Type = "zone", `Predicted Gaze X` = "", `Predicted Gaze Y` = "",
+                `Predicted Gaze X Normalised` = "", `Predicted Gaze Y Normalised` = "",
+                `Zone Name` = "Word", `Zone UID` = "object-3", `Zone X` = "761", `Zone Y` = "436",
+                `Zone W` = "381", `Zone H` = "97", `Zone X Normalised` = "0.4",
+                `Zone Y Normalised` = "0.55", `Zone W Normalised` = "0.2",
+                `Zone H Normalised` = "0.1")
+  samples <- cbind(upload_keys(n, "Trial", as.character(k), "", "tgt1", as.character(k + 2L)),
+                   Filename = "collection", Timestamp = sprintf("%.0f", t0 + elapsed),
+                   Elapsed = as.character(elapsed), Type = "prediction",
+                   `Predicted Gaze X` = as.character(round(gx * 1903)),
+                   `Predicted Gaze Y` = as.character(round((1 - gy) * 969)),
+                   `Predicted Gaze X Normalised` = fmt(gx), `Predicted Gaze Y Normalised` = fmt(gy),
+                   `Zone Name` = "", `Zone UID` = "", `Zone X` = "", `Zone Y` = "", `Zone W` = "",
+                   `Zone H` = "", `Zone X Normalised` = "", `Zone Y Normalised` = "",
+                   `Zone W Normalised` = "", `Zone H Normalised` = "")
+  write_recording(rbind(zone, samples), recording("collection", k, 1))
+}
+invisible(lapply(1:3, gaze_trial))
+
+n <- 40L
+elapsed <- round((seq_len(n) - 1L) * 16.7, 1)
+progress <- stats::plogis((seq_len(n) - 20) / 4)
+mx <- 0.62 - 0.12 * progress + stats::rnorm(n, 0, 0.005)
+my <- 0.7 - 0.53 * progress + stats::rnorm(n, 0, 0.005)
+mouse_keys <- function(n) upload_keys(n, "Instructions", "1", "Screen 1", "ins1", "1", "Trial Count")
+mouse <- rbind(
+  cbind(mouse_keys(1), Timestamp = "5231.4", Elapsed = "0", Type = "zone",
+        Name = "Continue Button", `Unique ID` = "object-2", `X Normalised` = "0.45",
+        `Y Normalised` = "0.2", `W Normalised` = "0.1", `H Normalised` = "0.06",
+        `X Raw` = "856", `Y Raw` = "775"),
+  cbind(mouse_keys(n), Timestamp = sprintf("%.1f", 5231.4 + elapsed),
+        Elapsed = sprintf("%.1f", elapsed), Type = "mouse", Name = "", `Unique ID` = "",
+        `X Normalised` = fmt(mx), `Y Normalised` = fmt(my), `W Normalised` = "0",
+        `H Normalised` = "0", `X Raw` = as.character(round(mx * 1903)),
+        `Y Raw` = as.character(round((1 - my) * 969)))
+)
+write_recording(mouse, recording("mousetracking", 1, 1))

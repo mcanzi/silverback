@@ -1,3 +1,8 @@
+# silverback (development version)
+
+* The example export includes eye tracking and mouse tracking recordings, so
+  the examples of `read_eyetracking()` and `read_mousetracking()` run.
+
 # silverback 0.1.0
 
 * silverback can be installed from R-universe (<https://mcanzi.r-universe.dev>).

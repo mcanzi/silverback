@@ -69,12 +69,12 @@ name of the screen. Pass the main export as \code{x} to add \code{task_name} and
 \code{participant_private_id}, \code{tree_node_key}, \code{display}, \code{trial} and \code{screen}.
 }
 \examples{
-\dontrun{
-g <- read_gorilla("data")
-eye <- read_eyetracking("data", x = g)
+g <- read_gorilla(gorilla_example(), quiet = TRUE)
+eye <- read_eyetracking(gorilla_example(), x = g)
+eye
 eye$gaze
 eye$calibration
-}
+table(eye$gaze$trial, eye$gaze$zone_name, useNA = "ifany")
 }
 \seealso{
 \code{\link[=read_mousetracking]{read_mousetracking()}} for the Mouse Tracking component.
