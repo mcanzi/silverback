@@ -97,10 +97,48 @@ for the Mouse Tracking component.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-g <- read_gorilla("data")
-eye <- read_eyetracking("data", x = g)
+g <- read_gorilla(gorilla_example(), quiet = TRUE)
+eye <- read_eyetracking(gorilla_example(), x = g)
+eye
+#> <gorilla_eyetracking>
+#> 48 gaze samples from 1 participant in 3 recordings; 43.8% in a zone
+#> 1 calibration attempt (succeeded: 1)
 eye$gaze
+#> # A tibble: 48 × 20
+#>    participant_private_id experiment_version tree_node_key task_name spreadsheet
+#>    <chr>                               <dbl> <chr>         <chr>     <chr>      
+#>  1 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  2 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  3 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  4 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  5 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  6 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  7 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  8 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#>  9 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#> 10 9100037                                 3 task-ld2k     Lexical … Spreadshee…
+#> # ℹ 38 more rows
+#> # ℹ 15 more variables: spreadsheet_index <dbl>, display <chr>, trial <dbl>,
+#> #   screen <chr>, screen_id <chr>, file <chr>, type <chr>, time <dttm>,
+#> #   elapsed <dbl>, x <dbl>, y <dbl>, x_raw <dbl>, y_raw <dbl>, zone_id <chr>,
+#> #   zone_name <chr>
 eye$calibration
-} # }
+#> # A tibble: 5 × 20
+#>   participant_private_id experiment_version tree_node_key task_name  spreadsheet
+#>   <chr>                               <dbl> <chr>         <chr>      <chr>      
+#> 1 9100037                                 3 task-ld2k     Lexical d… Spreadshee…
+#> 2 9100037                                 3 task-ld2k     Lexical d… Spreadshee…
+#> 3 9100037                                 3 task-ld2k     Lexical d… Spreadshee…
+#> 4 9100037                                 3 task-ld2k     Lexical d… Spreadshee…
+#> 5 9100037                                 3 task-ld2k     Lexical d… Spreadshee…
+#> # ℹ 15 more variables: spreadsheet_index <dbl>, display <chr>, trial <dbl>,
+#> #   screen <chr>, screen_id <chr>, attempt <int>, outcome <chr>, file <chr>,
+#> #   point_x <dbl>, point_y <dbl>, centroid_x <dbl>, centroid_y <dbl>,
+#> #   sd_x <dbl>, sd_y <dbl>, error <dbl>
+table(eye$gaze$trial, eye$gaze$zone_name, useNA = "ifany")
+#>    
+#>     Word <NA>
+#>   1    7    9
+#>   2    4   12
+#>   3   10    6
 ```
